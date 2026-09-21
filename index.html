@@ -22,7 +22,7 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 .swipeWrap{position:relative;overflow:hidden;border-bottom:1px solid #eee}.swipeDelete{position:absolute;right:0;top:0;bottom:0;width:92px;border:0;background:#b42318;color:#fff;font-weight:800;font-size:16px}.swipeRow{position:relative;background:#fff;transition:transform .18s ease;touch-action:pan-y;padding:12px 0}.swipeRow.open{transform:translateX(-92px)}</style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v4.0</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v4.2</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -75,7 +75,8 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 </section>
 
 <section id="stats" class="screen">
-<div class="card"><h2>最近の対局</h2><div class="note" style="margin-bottom:8px">タップすると内容を編集できます。</div><div id="history"></div></div>
+<div class="card"><h2>最近の対局</h2><div class="note" style="margin-bottom:8px">タップすると内容を編集できます。</div><div id="history"></div>
+<div id="nextGameFromStats" style="margin-top:18px"></div></div>
 <div class="card"><button class="back" type="button" onclick="show('home')">← 店舗選択へ戻る</button><h2>成績</h2>
 <div class="toolbar"><select id="statsStore" onchange="renderStats()"></select></div>
 <div class="statgrid">
@@ -107,7 +108,7 @@ const localToday=()=>{const d=new Date(),z=d.getTimezoneOffset()*60000;return ne
 const today=localToday();
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma)}));
-/* v4.0: known Cabo settings correction from the user's confirmed rules */
+/* v4.2: known Cabo settings correction from the user's confirmed rules */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
     return {...s,pointRate:100,startPoints:25000,returnPoints:30000,gameFee:600,topFee:0,umaType:"1-3"};
@@ -189,7 +190,18 @@ function updateGameNo(){if(!selected)return;$("gameNo").textContent=`この日�
 function renderChipDisplay(){const v=Math.max(-10,Math.min(10,+$("chips").value||0));$("chips").value=v;if($("chipDisplay"))$("chipDisplay").textContent=(v>0?"+":"")+v+"枚";}
 function changeChips(d){const v=Math.max(-10,Math.min(10,(+$("chips").value||0)+d));$("chips").value=v;renderChipDisplay();calc();}
 function updatePointsPreview(){if($("pointsPreview")){const v=(+$("points").value||0)*100;$("pointsPreview").textContent=`入力値 → ${v.toLocaleString()}点`;}}
+
+function renderGameTodayRanks(){
+ if(!$("gameTodayRanks")||!selected)return;
+ const d=$("date")?.value||today;
+ const rr=records.filter(r=>r.date===d && r.storeId===selected.id);
+ const maxRank=(+selected.players===3)?3:4;
+ const counts=Array.from({length:maxRank},(_,i)=>rr.filter(r=>+r.rank===i+1).length);
+ $("gameTodayRanks").innerHTML=`<div style="font-weight:800;font-size:18px;margin-bottom:10px">今日の成績</div><div class="rankgrid">${counts.map((n,i)=>`<div class="rankbox">${i+1}着<b>${n}回</b></div>`).join("")}</div>`;
+}
+
 function calc(){
+ renderGameTodayRanks();
  if(!selected)return;const p=(+$("points").value||0)*100,r=+$("rank").value||1,c=+$("chips").value||0;
  const score=(p-(+selected.returnPoints||0))/1000*(+selected.pointRate||0),oka=okaYen(selected,r),uma=umaYen(selected,r),chip=c*(+selected.chipValue||0),gross=Math.round(score+oka+uma+chip),fee=-(+selected.gameFee||0),extraFee=r===1?-(+selected.topFee||0):0,tobi=((selected.belowZero==="yes"&&p<0)||(selected.belowZero!=="yes"&&p<=0))?-(+selected.tobiAmount||0):0,total=Math.round(gross+fee+extraFee+tobi);
  $("calc").textContent=fmt(total);$("calc").className="profit "+(total>=0?"pos":"neg");
@@ -211,7 +223,30 @@ function editRecord(i){
 function deleteRecord(){if(editRecordIndex<0)return;if(!confirm("この対局記録を削除しますか？"))return;records.splice(editRecordIndex,1);saveAll();editRecordIndex=-1;showStats(selected?.id||"all")}
 function cancelGameEdit(){editRecordIndex=-1;show("home")}
 
+
+function renderNextGameButton(storeId){
+ const box=$("nextGameFromStats"); if(!box)return;
+ if(!storeId){box.innerHTML="";return}
+ const st=stores.find(x=>x.id===storeId); if(!st){box.innerHTML="";return}
+ box.innerHTML=`<button class="primary" type="button" onclick="nextGameSameStore('${storeId}')">同じ店舗で次の対局を入力</button>`;
+}
+function nextGameSameStore(storeId){
+ const st=stores.find(x=>x.id===storeId); if(!st)return;
+ selected=st;
+ show("game");
+ $("date").value=today;
+ editRecordIndex=-1;
+ $("rank").value="1";
+ $("points").value=Math.round((+st.startPoints||25000)/100);
+ $("chips").value=0;
+ if(typeof renderChipDisplay==="function")renderChipDisplay();
+ if(typeof updateGameNo==="function")updateGameNo();
+ calc();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+
 function showStats(storeId){
+ renderNextGameButton(storeId||"");
  $("statsStore").innerHTML=`<option value="all">全店舗</option>`+stores.map(s=>`<option value="${s.id}">${esc(s.shop)}</option>`).join("");
  $("statsStore").value=storeId&&stores.some(s=>s.id===storeId)?storeId:"all";renderStats();show("stats");
 }
