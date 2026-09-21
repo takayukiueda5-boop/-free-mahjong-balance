@@ -13,7 +13,7 @@ h1{font-size:24px;margin:8px 0}.sub,.note{color:#777;font-size:13px}.sub{margin-
 button{font:inherit;cursor:pointer}.store{display:block;width:100%;text-align:left;background:#fff;border:1px solid #ddd;border-radius:13px;padding:16px;margin:8px 0;font-weight:700}.store small{display:block;color:#777;font-weight:400;margin-top:5px}.add{background:#202124;color:#fff}
 label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-bottom:14px}input,select{width:100%;padding:12px;border:1px solid #ccc;border-radius:9px;font-size:16px;background:#fff}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.primary{width:100%;background:#18794e;color:#fff;border:0;border-radius:10px;padding:14px;font-weight:800}.secondary,.back{background:#eee;border:0;border-radius:9px;padding:11px 14px}.back{background:transparent;padding:0 0 12px;color:#555}
 .result{background:#f0f7f3;padding:14px;border-radius:10px;line-height:1.8}.profit{font-size:28px;font-weight:900}.pos{color:#18794e}.neg{color:#b42318}.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#f7f7f7;border-radius:11px;padding:13px}.stat b{display:block;font-size:20px;margin-top:4px}
-.month{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #eee;padding:12px 0}.empty{color:#777;padding:10px 0}.edit{float:right;background:#eee;border:0;border-radius:7px;padding:6px 9px;font-size:12px}
+.month{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #eee;padding:12px 0}.empty{color:#777;padding:10px 0}.edit{background:#eee;border:0;border-radius:7px;padding:7px 11px;font-size:12px;flex:0 0 auto}
 .historyRow{width:100%;border:0;background:transparent;text-align:left;padding:0;color:inherit}.historyRow .month{align-items:center}.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:14px}.toolbar select{flex:1}.pillrow{display:flex;gap:7px;margin-bottom:14px}.pill{flex:1;border:1px solid #ddd;background:#fff;border-radius:999px;padding:9px 5px;font-size:13px}.pill.active{background:#202124;color:#fff;border-color:#202124}
 .rankgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 16px}.rankbox{background:#f7f7f7;border-radius:10px;padding:10px 5px;text-align:center}.rankbox b{display:block;font-size:20px}
 .chart{display:flex;align-items:flex-end;gap:10px;height:180px;padding:12px 4px 0;border-bottom:1px solid #ddd}.barwrap{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;min-width:0}.barvalue{font-size:11px;margin-bottom:4px;white-space:nowrap}.bar{width:70%;max-width:52px;background:#18794e;border-radius:6px 6px 0 0;min-height:2px}.bar.negbar{background:#b42318}.barlabel{font-size:11px;margin-top:5px;white-space:nowrap}.summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.summary div{background:#f7f7f7;border-radius:10px;padding:10px}.summary b{display:block;font-size:18px;margin-top:3px}
@@ -46,7 +46,7 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 .scoreInputWrap{max-width:205px}
 .scoreSuffix{right:14px}
 
-/* v5.5 Heavy / premium mahjong theme */
+/* v5.6 Heavy / premium mahjong theme */
 :root{
   --bg:#07110d;
   --bg2:#0b1a14;
@@ -242,18 +242,26 @@ a{color:var(--gold2)}
 .swipeDelete{z-index:0}
 .swipeRow{z-index:1}
 
+
+.storeRow{display:flex;align-items:center;gap:10px;margin:8px 0}
+.storeRow .store{margin:0;flex:1;min-width:0}
+.storeRow .edit{margin:0}
+.statsTopRanks{margin-bottom:14px}
+.statsTopRanks .rankgrid{margin-bottom:0}
+.foldBtn{width:100%;margin-top:12px;background:#0b1913;color:var(--gold2);border:1px solid rgba(201,165,87,.40);border-radius:10px;padding:12px;font-weight:800}
+
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v5.5</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v5.6</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
 <h1>今日はどこの店舗ですか？</h1>
 <div class="sub">店舗を選ぶと、その店舗のルールと成績を自動で読み込みます。</div>
 <div id="storeList"></div>
-<div id="homeToday" style="margin:16px 0 4px"></div>
 <button class="store add" type="button" onclick="openNewStore()">＋ 新しい店舗を登録</button>
+<div id="homeToday" style="margin:16px 0 4px"></div>
 </div>
 <div class="card"><button class="primary" type="button" onclick="showStats()">成績を見る</button></div>
 </section>
@@ -314,6 +322,10 @@ a{color:var(--gold2)}
 </section>
 
 <section id="stats" class="screen">
+<div class="card statsTopRanks">
+<div class="pillrow"><button id="statsTodayBtn" class="pill active" type="button" onclick="setStatsRankMode('today')">今日</button><button id="statsCarryBtn" class="pill" type="button" onclick="setStatsRankMode('carry')">前日から合算</button></div>
+<div id="statsTopRankSummary"></div>
+</div>
 <div class="card"><h2>最近の対局</h2><div class="note" style="margin-bottom:8px">タップすると内容を編集できます。</div><div id="history"></div>
 <div id="nextGameFromStats" style="margin-top:18px"></div></div>
 <div class="card"><button class="back" type="button" onclick="show('home')">← 店舗選択へ戻る</button><h2>成績</h2>
@@ -337,7 +349,7 @@ a{color:var(--gold2)}
 </main>
 <script>
 const $=id=>document.getElementById(id);
-let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="day",historyLimit=10;
+let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="day",historyExpanded=false,statsRankMode="today";
 const rawStores=localStorage.getItem("fm_stores"), rawRecords=localStorage.getItem("fm_records");
 // 読み込み時は絶対に空データで上書きしない。既存データは退避してから扱う。
 try{stores=JSON.parse(rawStores||"[]");records=JSON.parse(rawRecords||"[]")}catch(e){stores=[];records=[]}
@@ -348,7 +360,7 @@ const today=localToday();
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma)}));
-/* v5.5: known Cabo settings correction from the user's confirmed rules */
+/* v5.6: known Cabo settings correction from the user's confirmed rules */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
     return {...s,pointRate:100,startPoints:25000,returnPoints:30000,gameFee:600,topFee:(s.topFee==null?0:+s.topFee),umaType:"1-3"};
@@ -398,7 +410,7 @@ function renderStores(){
  renderHomeToday();
  const box=$("storeList");
  if(!stores.length){box.innerHTML='<div class="empty">まだ店舗が登録されていません。</div>';return}
- box.innerHTML=stores.map((s,i)=>`<div><button class="store" type="button" onclick="selectStore(${i})">${esc(s.shop)}</button><button class="edit" type="button" onclick="editStore(${i})">編集</button></div>`).join("");
+ box.innerHTML=stores.map((s,i)=>`<div class="storeRow"><button class="store" type="button" onclick="selectStore(${i})">${esc(s.shop)}</button><button class="edit" type="button" onclick="editStore(${i})">編集</button></div>`).join("");
 }
 function openNewStore(){editStoreIndex=-1;$("registerTitle").textContent="店舗を登録";clearForm();toggleTobiField();show("register")}
 function clearForm(){["shop","memo"].forEach(id=>$(id).value="");$("players").value="4";$("pointRate").value="";$("chipValue").value="500";$("gameFee").value="600";$("topFee").value="0";$("startPoints").value="25000";$("returnPoints").value="30000";$("belowZero").value="no";$("tobiAmount").value="0";$("umaType").value="1-2"}
@@ -553,10 +565,34 @@ function nextGameSameStore(storeId){
 }
 
 function showStats(storeId){
- historyLimit=10;
+ historyExpanded=false;
+ statsRankMode="today";
  renderNextGameButton(storeId||"");
  $("statsStore").innerHTML=`<option value="all">全店舗</option>`+stores.map(s=>`<option value="${s.id}">${esc(s.shop)}</option>`).join("");
  $("statsStore").value=storeId&&stores.some(s=>s.id===storeId)?storeId:"all";renderStats();show("stats");
+}
+function setStatsRankMode(mode){
+ statsRankMode=mode;
+ if($("statsTodayBtn"))$("statsTodayBtn").classList.toggle("active",mode==="today");
+ if($("statsCarryBtn"))$("statsCarryBtn").classList.toggle("active",mode==="carry");
+ renderStatsTopRanks();
+}
+function renderStatsTopRanks(){
+ const box=$("statsTopRankSummary"); if(!box)return;
+ const base=filteredRecords();
+ const prev=dateShift(today,-1);
+ const dates=statsRankMode==="carry"?[prev,today]:[today];
+ const rr=base.filter(r=>dates.includes(r.date));
+ let maxPlayers=4;
+ const storeId=$("statsStore")?.value;
+ if(storeId && storeId!=="all"){
+   const st=stores.find(x=>x.id===storeId);
+   if(st)maxPlayers=+st.players||4;
+ }else if(rr.length){
+   maxPlayers=Math.max(...rr.map(r=>+r.players||storeForRecord(r)?.players||4));
+ }
+ const counts=Array.from({length:maxPlayers},(_,i)=>rr.filter(r=>+r.rank===i+1).length);
+ box.innerHTML=`<div class="rankgrid">${counts.map((n,i)=>`<div class="rankbox">${i+1}着<b>${n}回</b></div>`).join("")}</div>`;
 }
 function filteredRecords(){const v=$("statsStore").value;return v==="all"?records:records.filter(r=>r.storeId===v)}
 function sumOf(rr,key="total"){return rr.reduce((a,r)=>a+(key==="gross"?recGross(r):(+r.total||0)),0)}
@@ -564,7 +600,7 @@ function renderStats(){
  const rr=filteredRecords(),y=today.slice(0,4),m=today.slice(0,7),by=fn=>rr.filter(fn);
  const day=by(r=>r.date===today),mon=by(r=>r.date.slice(0,7)===m),yr=by(r=>r.date.slice(0,4)===y),all=sumOf(rr);
  $("todayTotal").textContent=fmt(sumOf(day));$("monthTotal").textContent=fmt(sumOf(mon));$("yearTotal").textContent=fmt(sumOf(yr));$("allTotal").textContent=fmt(all);$("grossTotal").textContent=fmt(sumOf(rr,"gross"));$("gameCount").textContent=rr.length;$("avg").textContent=fmt(rr.length?all/rr.length:0);$("avgRank").textContent=rr.length?(rr.reduce((a,r)=>a+(+r.rank||0),0)/rr.length).toFixed(2)+"着":"-";
- renderStoreBreakdown();renderRankStats();renderMonthly(rr);renderHistory(rr);
+ renderStatsTopRanks();renderStoreBreakdown();renderRankStats();renderMonthly(rr);renderHistory(rr);
 }
 function renderStoreBreakdown(){
  const scope=$("statsStore").value,ss=scope==="all"?stores:stores.filter(s=>s.id===scope);
@@ -590,14 +626,20 @@ let swipeStartX=0,swipeStartY=0;
 function swipeStart(e,el){const t=e.touches&&e.touches[0];if(!t)return;document.querySelectorAll(".swipeRow.open").forEach(x=>{if(x!==el)x.classList.remove("open")});swipeStartX=t.clientX;swipeStartY=t.clientY}
 function swipeEnd(e,el){const t=e.changedTouches&&e.changedTouches[0];if(!t)return;const dx=t.clientX-swipeStartX,dy=t.clientY-swipeStartY;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)){el.classList.toggle("open",dx<0)}}
 function deleteHistoryRecord(i,e){if(e){e.stopPropagation();e.preventDefault()}const r=records[i];if(!r)return;if(!confirm(`${r.date}・${r.shop}・${r.rank}着の対局を削除しますか？`))return;records.splice(i,1);saveAll();renderStats();}
-function showMoreHistory(){historyLimit+=10;renderStats()}
+function toggleHistory(){
+ historyExpanded=!historyExpanded;
+ renderHistory(filteredRecords());
+}
 function renderHistory(rr){
  const allowed=new Set(rr.map(r=>r.id));
  const all=records.map((r,i)=>({r,i})).filter(o=>allowed.has(o.r.id)).reverse();
- const items=all.slice(0,historyLimit);
+ const items=historyExpanded?all:all.slice(0,4);
  const rows=items.map(({r,i})=>`<div class="swipeWrap"><button class="swipeDelete" type="button" onclick="deleteHistoryRecord(${i},event)">削除</button><div class="swipeRow" ontouchstart="swipeStart(event,this)" ontouchend="swipeEnd(event,this)" onclick="if(!this.classList.contains('open'))editRecord(${i})"><div class="month"><span>${r.date}・${gameNumber(r,i)}ゲーム目<br><small>${esc(r.shop)} / ${r.rank}着 / ${(+r.points||0).toLocaleString()}点 / チップ${r.chips||0}枚</small></span><b class="${(+r.total||0)>=0?'pos':'neg'}">${fmt(+r.total||0)}<small style="display:block;font-weight:400;color:#555">抜き ${fmt(recGross(r))}</small></b></div></div></div>`).join("");
- const more=all.length>historyLimit?`<button class="moreBtn" type="button" onclick="showMoreHistory()">さらに表示（残り${all.length-historyLimit}件）</button>`:"";
- $("history").innerHTML=(rows||'<div class="empty">まだ記録がありません。</div>')+more;
+ let fold="";
+ if(all.length>4){
+   fold=`<button class="foldBtn" type="button" onclick="toggleHistory()">${historyExpanded?"過去の対局を閉じる":`さらに表示（残り${all.length-4}件）`}</button>`;
+ }
+ $("history").innerHTML=(rows||'<div class="empty">まだ記録がありません。</div>')+fold;
 }
 
 
