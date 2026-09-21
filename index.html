@@ -46,7 +46,7 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 .scoreInputWrap{max-width:205px}
 .scoreSuffix{right:14px}
 
-/* v5.3 Heavy / premium mahjong theme */
+/* v5.4 Heavy / premium mahjong theme */
 :root{
   --bg:#07110d;
   --bg2:#0b1a14;
@@ -207,7 +207,7 @@ input:focus,select:focus{
   border-color:rgba(201,165,87,.40);
 }
 .swipeWrap{border-bottom-color:rgba(201,165,87,.16)}
-.swipeRow{background:transparent}
+.swipeRow{background:var(--panel)}
 .swipeDelete{background:#9f302b}
 #history .month small{color:#aab2ab}
 #history .month b small{color:#9ba49d!important}
@@ -219,10 +219,33 @@ a{color:var(--gold2)}
   .card{border-radius:14px;padding:16px}
 }
 
+
+.dayStoreCard{
+  margin-top:14px;
+  padding:14px;
+  background:linear-gradient(180deg,#10231b,#0b1913);
+  border:1px solid rgba(201,165,87,.30);
+  border-radius:14px;
+}
+.dayStoreName{font-weight:800;font-size:17px;margin-bottom:10px;color:#ead7a5}
+.dayRankGrid{display:grid;gap:8px}
+.dayRankCell{
+  background:#0a1712;
+  border:1px solid rgba(201,165,87,.22);
+  border-radius:12px;
+  padding:10px 4px;
+  text-align:center;
+  color:#f2ead7;
+}
+.dayRankCell b{display:block;font-size:20px;margin-top:2px}
+.swipeRow{background:var(--panel)!important}
+.swipeDelete{z-index:0}
+.swipeRow{z-index:1}
+
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v5.3</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v5.4</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -270,7 +293,7 @@ a{color:var(--gold2)}
 <label>最終持ち点</label>
 <div class="scoreInputWrap">
 <input id="points" class="scoreInput" type="number" step="1" inputmode="numeric" placeholder="例：250">
-<span class="scoreSuffix">00</span>
+<span id="scoreSuffix" class="scoreSuffix" style="display:none">00</span>
 </div>
 </div>
 <div class="field chipField">
@@ -324,7 +347,7 @@ const today=localToday();
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma)}));
-/* v5.3: known Cabo settings correction from the user's confirmed rules */
+/* v5.4: known Cabo settings correction from the user's confirmed rules */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
     return {...s,pointRate:100,startPoints:25000,returnPoints:30000,gameFee:600,topFee:(s.topFee==null?0:+s.topFee),umaType:"1-3"};
@@ -389,7 +412,7 @@ function saveStore(){
  saveAll();editStoreIndex=-1;alert("店舗を保存しました。");show("home");
 }
 function selectStore(i){
- selected=stores[i];editRecordIndex=-1;setupGameScreen();$("gameDate").value=today;$("points").value="";updatePointsPreview();$("chips").value=0;renderChipDisplay();$("rank").value="1";updateRankButtons();updateGameNo();show("game");calc();
+ selected=stores[i];editRecordIndex=-1;setupGameScreen();$("gameDate").value=today;$("points").value="";updatePointsPreview();updateScoreSuffix();$("chips").value=0;renderChipDisplay();$("rank").value="1";updateRankButtons();updateGameNo();show("game");calc();
 }
 function setupGameScreen(){
 renderTodayRankSummary();
@@ -449,10 +472,10 @@ function renderTodayRankSummary(){
    const counts=Array.from({length:n},(_,i)=>g.records.filter(r=>+r.rank===i+1).length);
    const net=g.records.reduce((a,r)=>a+(+r.total||0),0);
    const gross=g.records.reduce((a,r)=>a+recGross(r),0);
-   return `<div style="margin-top:14px;padding:14px;background:#fafafa;border-radius:14px">
-     <div style="font-weight:800;font-size:17px;margin-bottom:10px">${esc(g.name)}</div>
-     <div style="display:grid;grid-template-columns:repeat(${n},1fr);gap:8px">
-       ${counts.map((c,i)=>`<div style="background:#fff;border-radius:12px;padding:10px 4px;text-align:center;border:1px solid #eee"><div>${i+1}着</div><b style="display:block;font-size:20px;margin-top:2px">${c}回</b></div>`).join("")}
+   return `<div class="dayStoreCard">
+     <div class="dayStoreName">${esc(g.name)}</div>
+     <div class="dayRankGrid" style="grid-template-columns:repeat(${n},1fr)">
+       ${counts.map((c,i)=>`<div class="dayRankCell"><div>${i+1}着</div><b>${c}回</b></div>`).join("")}
      </div>
      <div class="summary" style="margin-top:10px">
        <div>実収支<b class="${net>=0?'pos':'neg'}">${fmt(net)}</b></div>
@@ -469,10 +492,23 @@ function renderTodayRankSummary(){
  if($("rankQuickStats")) $("rankQuickStats").innerHTML="";
 }
 
+function updateScoreSuffix(){
+ const suffix=$("scoreSuffix");
+ if(!suffix)return;
+ suffix.style.display=$("points").value!==""?"block":"none";
+}
 function calc(){
  renderTodayRankSummary();
  renderGameTodayRanks();
- if(!selected)return;const p=(+$("points").value||0)*100,r=+$("rank").value||1,c=+$("chips").value||0;
+ updateScoreSuffix();
+ if(!selected)return;
+ if($("points").value===""){
+   $("calc").textContent="—";
+   $("calc").className="profit";
+   $("breakdown").innerHTML='<span class="note">最終持ち点を入力してください。</span>';
+   return {total:0,gross:0,emptyPoints:true};
+ }
+ const p=(+$("points").value||0)*100,r=+$("rank").value||1,c=+$("chips").value||0;
  const score=(p-(+selected.returnPoints||0))/1000*(+selected.pointRate||0),oka=okaYen(selected,r),uma=umaYen(selected,r),chip=c*(+selected.chipValue||0),gross=Math.round(score+oka+uma+chip),fee=-(+selected.gameFee||0),extraFee=r===1?-(+selected.topFee||0):0,tobi=((selected.belowZero==="yes"&&p<0)||(selected.belowZero!=="yes"&&p<=0))?-(+selected.tobiAmount||0):0,total=Math.round(gross+fee+extraFee+tobi);
  $("calc").textContent=fmt(total);$("calc").className="profit "+(total>=0?"pos":"neg");
  $("breakdown").innerHTML=`素点 ${fmt(score)} ＋ オカ ${fmt(oka)} ＋ ウマ ${fmt(uma)} ＋ チップ ${fmt(chip)}<br>ゲーム代抜き ${fmt(gross)} ／ ゲーム代 ${fmt(fee)}${extraFee?` ／ トップ賞 ${fmt(extraFee)}`:""}${tobi?` ／ トビ賞 ${fmt(tobi)}`:""}`;
@@ -481,14 +517,16 @@ function calc(){
 $("belowZero").addEventListener("change",toggleTobiField);
 ["gameDate","points"].forEach(id=>$(id).addEventListener("input",()=>{if(id==="gameDate")updateGameNo();if(id==="points")updatePointsPreview();calc()}));
 function recordGame(){
- if(!selected)return;if(selected.belowZero!=="yes" && ((+$("points").value||0)*100)<0){alert("この店舗は箱下計算「無」のため、マイナス点は入力できません。");return;}const {total,gross}=calc(),r=+$("rank").value||1,p=(+$("points").value||0)*100,c=+$("chips").value||0,date=$("gameDate").value||today;
+ if(!selected)return;
+ if($("points").value===""){alert("最終持ち点を入力してください。");return;}
+ if(selected.belowZero!=="yes" && ((+$("points").value||0)*100)<0){alert("この店舗は箱下計算「無」のため、マイナス点は入力できません。");return;}const {total,gross}=calc(),r=+$("rank").value||1,p=(+$("points").value||0)*100,c=+$("chips").value||0,date=$("gameDate").value||today;
  const obj={id:editRecordIndex>=0?records[editRecordIndex].id:uid(),date,shop:selected.shop,storeId:selected.id,total,gross,rank:r,points:p,chips:c,games:1,players:selected.players};
  if(editRecordIndex>=0)records[editRecordIndex]=obj;else records.push(obj);
  saveAll();const msg=editRecordIndex>=0?"変更を保存しました":"記録しました";editRecordIndex=-1;alert(`${msg}：${fmt(total)}`);showStats(selected.id);
 }
 function editRecord(i){
  const r=records[i],s=storeForRecord(r);if(!s){alert("この記録の店舗設定が見つかりません。");return}
- selected=s;editRecordIndex=i;setupGameScreen();$("gameDate").value=r.date;$("rank").value=String(r.rank);updateRankButtons();$("points").value=Math.round((+r.points||0)/100);updatePointsPreview();$("chips").value=Math.max(-10,Math.min(10,+r.chips||0));renderChipDisplay();updateGameNo();show("game");calc();
+ selected=s;editRecordIndex=i;setupGameScreen();$("gameDate").value=r.date;$("rank").value=String(r.rank);updateRankButtons();$("points").value=Math.round((+r.points||0)/100);updatePointsPreview();updateScoreSuffix();$("chips").value=Math.max(-10,Math.min(10,+r.chips||0));renderChipDisplay();updateGameNo();show("game");calc();
 }
 function deleteRecord(){if(editRecordIndex<0)return;if(!confirm("この対局記録を削除しますか？"))return;records.splice(editRecordIndex,1);saveAll();editRecordIndex=-1;showStats(selected?.id||"all")}
 function cancelGameEdit(){editRecordIndex=-1;show("home")}
@@ -509,6 +547,7 @@ function nextGameSameStore(storeId){
  $("rank").value="1";
  updateRankButtons();
  $("points").value="";
+ updateScoreSuffix();
  $("chips").value=0;
  if(typeof renderChipDisplay==="function")renderChipDisplay();
  if(typeof updateGameNo==="function")updateGameNo();
