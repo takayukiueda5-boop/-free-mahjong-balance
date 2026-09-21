@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#202124">
+<title>フリー麻雀収支</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f5f7;color:#222;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif}
+header{background:#202124;color:#fff;padding:17px 16px;font-weight:800;font-size:20px}main{max-width:720px;margin:auto;padding:14px}
+.screen{display:none}.screen.active{display:block}.card{background:#fff;border-radius:15px;padding:18px;margin-bottom:14px;box-shadow:0 2px 8px #0001}
+h1{font-size:24px;margin:8px 0}.sub,.note{color:#777;font-size:13px}.sub{margin-bottom:18px}h2{font-size:18px;margin:0 0 15px}
+button{font:inherit;cursor:pointer}.store{display:block;width:100%;text-align:left;background:#fff;border:1px solid #ddd;border-radius:13px;padding:16px;margin:8px 0;font-weight:700}.store small{display:block;color:#777;font-weight:400;margin-top:5px}.add{background:#202124;color:#fff}
+label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-bottom:14px}input,select{width:100%;padding:12px;border:1px solid #ccc;border-radius:9px;font-size:16px;background:#fff}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.primary{width:100%;background:#18794e;color:#fff;border:0;border-radius:10px;padding:14px;font-weight:800}.secondary,.back{background:#eee;border:0;border-radius:9px;padding:11px 14px}.back{background:transparent;padding:0 0 12px;color:#555}
+.result{background:#f0f7f3;padding:14px;border-radius:10px;line-height:1.8}.profit{font-size:28px;font-weight:900}.pos{color:#18794e}.neg{color:#b42318}.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#f7f7f7;border-radius:11px;padding:13px}.stat b{display:block;font-size:20px;margin-top:4px}
+.month{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:12px 0}.empty{color:#777;padding:10px 0}.edit{float:right;background:#eee;border:0;border-radius:7px;padding:6px 9px;font-size:12px}
+</style>
+</head>
+<body>
+<header>🀄 フリー麻雀収支</header>
+<main>
+<section id="home" class="screen active">
+<div class="card">
+<h1>今日はどこの店舗ですか？</h1>
+<div class="sub">店舗を選ぶと、その店舗のルールを自動で読み込みます。</div>
+<div id="storeList"></div>
+<button class="store add" type="button" onclick="openNewStore()">＋ 新しい店舗を登録</button>
+</div>
+<div class="card"><button class="primary" type="button" onclick="showStats()">月間・累計成績を見る</button></div>
+</section>
+
+<section id="register" class="screen">
+<div class="card">
+<button class="back" type="button" onclick="show('home')">← 戻る</button><h2 id="registerTitle">店舗を登録</h2>
+<div class="field"><label>店舗名</label><input id="shop" autocomplete="off"></div>
+<div class="field"><label>人数</label><select id="players"><option value="4">四麻</option><option value="3">三麻</option></select></div>
+<div class="grid">
+<div class="field"><label>点数レート（円/1000点）</label><input id="pointRate" type="number" value="0.5" step="0.1"></div>
+<div class="field"><label>チップ（円/枚）</label><input id="chipValue" type="number" value="500"></div>
+<div class="field"><label>ゲーム代（円/ゲーム）</label><input id="gameFee" type="number" value="500"></div>
+<div class="field"><label>トップ賞等（円/ゲーム）</label><input id="topFee" type="number" value="0"></div>
+</div>
+<div class="field"><label>返し点</label><input id="returnPoints" type="number" value="25000"></div>
+<div class="grid">
+<div class="field"><label>1着ウマ</label><input id="uma1" type="number" value="10000"></div>
+<div class="field"><label>2着ウマ</label><input id="uma2" type="number" value="5000"></div>
+<div class="field"><label>3着ウマ</label><input id="uma3" type="number" value="-5000"></div>
+<div class="field"><label>4着ウマ</label><input id="uma4" type="number" value="-10000"></div>
+</div>
+<div class="field"><label>ルールメモ</label><input id="memo" placeholder="例：赤3・祝儀あり"></div>
+<button class="primary" type="button" onclick="saveStore()">保存する</button>
+</div>
+</section>
+
+<section id="game" class="screen">
+<div class="card">
+<button class="back" type="button" onclick="show('home')">← 店舗選択へ戻る</button>
+<h2 id="gameTitle"></h2><div class="note" id="ruleNote"></div>
+<div class="field" style="margin-top:15px"><label>対局日</label><input id="gameDate" type="date"></div>
+<div class="grid"><div class="field"><label>ゲーム数</label><input id="games" type="number" min="1" value="1"></div><div class="field"><label>着順</label><select id="rank"></select></div></div>
+<div class="grid"><div class="field"><label>最終持ち点</label><input id="points" type="number"></div><div class="field"><label>獲得チップ</label><input id="chips" type="number" value="0"></div></div>
+<div class="field"><label>その他収支（円）</label><input id="other" type="number" value="0"></div>
+<div class="result"><div class="note">今回の実収支</div><div class="profit" id="calc">0円</div><div id="breakdown"></div></div>
+<button class="primary" style="margin-top:12px" type="button" onclick="recordGame()">この結果を記録</button>
+</div>
+</section>
+
+<section id="stats" class="screen">
+<div class="card"><button class="back" type="button" onclick="show('home')">← 店舗選択へ戻る</button><h2>成績</h2>
+<div class="statgrid"><div class="stat">今日<b id="todayTotal">0円</b></div><div class="stat">今月<b id="monthTotal">0円</b></div><div class="stat">今年<b id="yearTotal">0円</b></div><div class="stat">累計<b id="allTotal">0円</b></div><div class="stat">対局数<b id="gameCount">0</b></div><div class="stat">平均収支<b id="avg">0円</b></div></div></div>
+<div class="card"><h2>月別収支</h2><div id="monthly"></div></div><div class="card"><h2>最近の対局</h2><div id="history"></div></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let stores=[],records=[],selected=null,editIndex=-1;
+try{stores=JSON.parse(localStorage.getItem("fm_stores")||"[]");records=JSON.parse(localStorage.getItem("fm_records")||"[]")}catch(e){stores=[];records=[]}
+const today=new Date().toISOString().slice(0,10);
+$("gameDate").value=today;
+function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));$(id).classList.add("active");if(id==="home")renderStores()}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function renderStores(){
+ const box=$("storeList");
+ if(!stores.length){box.innerHTML='<div class="empty">まだ店舗が登録されていません。</div>';return}
+ box.innerHTML=stores.map((s,i)=>`<div><button class="store" type="button" onclick="selectStore(${i})">${esc(s.shop)}<small>${s.players==4?"四麻":"三麻"} / ${s.pointRate}円/1000点 / チップ${s.chipValue}円 / ゲーム代${s.gameFee}円</small></button><button class="edit" type="button" onclick="editStore(${i})">編集</button></div>`).join("");
+}
+function openNewStore(){editIndex=-1;$("registerTitle").textContent="店舗を登録";clearForm();show("register")}
+function clearForm(){["shop","memo"].forEach(id=>$(id).value="");$("players").value="4";$("pointRate").value=".5";$("chipValue").value="500";$("gameFee").value="500";$("topFee").value="0";$("returnPoints").value="25000";$("uma1").value="10000";$("uma2").value="5000";$("uma3").value="-5000";$("uma4").value="-10000"}
+function editStore(i){editIndex=i;const s=stores[i];$("registerTitle").textContent="店舗設定を編集";$("shop").value=s.shop;$("players").value=s.players;$("pointRate").value=s.pointRate;$("chipValue").value=s.chipValue;$("gameFee").value=s.gameFee;$("topFee").value=s.topFee;$("returnPoints").value=s.returnPoints;s.uma=[...(s.uma||[0,0,0,0]),0,0,0,0];$("uma1").value=s.uma[0];$("uma2").value=s.uma[1];$("uma3").value=s.uma[2];$("uma4").value=s.uma[3];$("memo").value=s.memo||"";show("register")}
+function saveStore(){
+ const name=$("shop").value.trim();if(!name){alert("店舗名を入力してください。");return}
+ const s={shop:name,players:+$("players").value,pointRate:+$("pointRate").value,chipValue:+$("chipValue").value,gameFee:+$("gameFee").value,topFee:+$("topFee").value,returnPoints:+$("returnPoints").value,uma:[+$("uma1").value,+$("uma2").value,+$("uma3").value,+$("uma4").value],memo:$("memo").value};
+ if(editIndex>=0)stores[editIndex]=s;else stores.push(s);
+ localStorage.setItem("fm_stores",JSON.stringify(stores));editIndex=-1;alert("店舗を保存しました。");show("home");
+}
+function selectStore(i){
+ selected=stores[i];$("gameTitle").textContent=selected.shop+" の対局入力";$("ruleNote").textContent=`${selected.players==4?"四麻":"三麻"} / ${selected.pointRate}円/1000点 / ゲーム代${selected.gameFee}円 / チップ${selected.chipValue}円`;
+ $("gameDate").value=today;$("games").value=1;$("points").value=selected.returnPoints;$("chips").value=0;$("other").value=0;
+ $("rank").innerHTML=Array.from({length:selected.players},(_,i)=>`<option value="${i+1}">${i+1}着</option>`).join("");
+ show("game");calc();
+}
+function calc(){
+ if(!selected)return;const p=+$("points").value||0,r=+$("rank").value,g=+$("games").value||1,c=+$("chips").value||0,o=+$("other").value||0;
+ const score=(p-selected.returnPoints)/1000*selected.pointRate,uma=(selected.uma[r-1]||0),chip=c*selected.chipValue,fee=-(selected.gameFee+selected.topFee)*g,total=Math.round(score+uma+chip+o+fee);
+ $("calc").textContent=(total>=0?"+":"")+total.toLocaleString()+"円";$("calc").className="profit "+(total>=0?"pos":"neg");
+ $("breakdown").innerHTML=`点数 ${Math.round(score).toLocaleString()}円 ＋ ウマ ${uma.toLocaleString()}円 ＋ チップ ${chip.toLocaleString()}円 ＋ その他 ${o.toLocaleString()}円 ＋ ゲーム代等 ${fee.toLocaleString()}円`;
+}
+["gameDate","games","rank","points","chips","other"].forEach(id=>$(id).addEventListener("input",calc));
+function recordGame(){
+ if(!selected)return;const p=+$("points").value||0,r=+$("rank").value,g=+$("games").value||1,c=+$("chips").value||0,o=+$("other").value||0;
+ const total=Math.round((p-selected.returnPoints)/1000*selected.pointRate+(selected.uma[r-1]||0)+c*selected.chipValue+o-(selected.gameFee+selected.topFee)*g);
+ records.push({date:$("gameDate").value||today,shop:selected.shop,total,rank:r,points:p,chips:c,games:g,players:selected.players});
+ localStorage.setItem("fm_records",JSON.stringify(records));alert(`記録しました：${total>=0?"+":""}${total.toLocaleString()}円`);showStats();
+}
+function sum(fn){return records.filter(fn).reduce((a,r)=>a+r.total,0)}function fmt(n){return(n>=0?"+":"")+n.toLocaleString()+"円"}
+function showStats(){const y=today.slice(0,4),m=today.slice(0,7);$("todayTotal").textContent=fmt(sum(r=>r.date===today));$("monthTotal").textContent=fmt(sum(r=>r.date.slice(0,7)===m));$("yearTotal").textContent=fmt(sum(r=>r.date.slice(0,4)===y));const all=sum(()=>true);$("allTotal").textContent=fmt(all);$("gameCount").textContent=records.reduce((a,r)=>a+r.games,0);$("avg").textContent=fmt(records.length?Math.round(all/records.length):0);
+ const mm={};records.forEach(r=>mm[r.date.slice(0,7)]=(mm[r.date.slice(0,7)]||0)+r.total);$("monthly").innerHTML=Object.keys(mm).sort().reverse().map(k=>`<div class="month"><span>${k}</span><b class="${mm[k]>=0?'pos':'neg'}">${fmt(mm[k])}</b></div>`).join("")||'<div class="empty">まだ記録がありません。</div>';
+ $("history").innerHTML=records.slice(-10).reverse().map(r=>`<div class="month"><span>${r.date}<br><small>${esc(r.shop)} / ${r.rank}着 / ${r.points.toLocaleString()}点 / チップ${r.chips}枚</small></span><b class="${r.total>=0?'pos':'neg'}">${fmt(r.total)}</b></div>`).join("")||'<div class="empty">まだ記録がありません。</div>';show("stats")}
+renderStores();
+</script>
+</body></html>
