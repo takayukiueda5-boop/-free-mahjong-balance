@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#202124">
+<meta name="theme-color" content="#081711">
 <title>フリー麻雀収支</title>
 <style>
 *{box-sizing:border-box}html,body,button,input,select{touch-action:manipulation}body{margin:0;background:#f4f5f7;color:#222;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif}
@@ -45,10 +45,184 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 .scoreInput{font-size:18px;line-height:1.2;padding-left:14px;padding-right:50px}
 .scoreInputWrap{max-width:205px}
 .scoreSuffix{right:14px}
+
+/* v5.3 Heavy / premium mahjong theme */
+:root{
+  --bg:#07110d;
+  --bg2:#0b1a14;
+  --panel:#0d1c16;
+  --panel2:#11231b;
+  --line:rgba(201,165,87,.42);
+  --gold:#c9a557;
+  --gold2:#e0c47a;
+  --text:#f3efe4;
+  --muted:#a8b2aa;
+  --green:#1d8c5b;
+  --mint:#55d89a;
+  --red:#ff6b63;
+}
+html{background:var(--bg)}
+body{
+  background:
+    radial-gradient(circle at 15% 0%,rgba(37,92,66,.28),transparent 34%),
+    radial-gradient(circle at 95% 20%,rgba(140,105,35,.10),transparent 30%),
+    linear-gradient(180deg,#07110d 0%,#091610 52%,#050b08 100%);
+  color:var(--text);
+  min-height:100vh;
+}
+header{
+  background:linear-gradient(180deg,#0a1712 0%,#07100c 100%);
+  color:#f8f1dc;
+  border-bottom:1px solid var(--line);
+  box-shadow:0 8px 26px rgba(0,0,0,.32);
+  letter-spacing:.02em;
+}
+main{padding:14px 14px 28px}
+.card{
+  background:
+    linear-gradient(180deg,rgba(18,38,29,.97),rgba(9,24,18,.97));
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:
+    0 12px 34px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.025);
+}
+h1,h2,label{color:#f4ead2}
+h1{letter-spacing:.01em}
+h2{color:#ecd9a8}
+.sub,.note{color:var(--muted)}
+input,select{
+  background:#0a1712;
+  color:var(--text);
+  border:1px solid rgba(201,165,87,.36);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+input::placeholder{color:#69766e}
+input:focus,select:focus{
+  outline:none;
+  border-color:var(--gold2);
+  box-shadow:0 0 0 3px rgba(201,165,87,.13);
+}
+.store{
+  background:linear-gradient(180deg,#10231b,#0b1913);
+  color:#f4ead2;
+  border:1px solid rgba(201,165,87,.42);
+  box-shadow:0 7px 16px rgba(0,0,0,.16);
+}
+.store:hover{border-color:var(--gold2)}
+.store small{color:var(--muted)}
+.add{
+  background:linear-gradient(180deg,#19251f,#101914);
+  color:#f3e5bd;
+  border-color:rgba(201,165,87,.55);
+}
+.edit{
+  float:right;
+  background:#14241d;
+  color:var(--gold2);
+  border:1px solid rgba(201,165,87,.40);
+  border-radius:8px;
+}
+.primary{
+  background:linear-gradient(180deg,#1d8c5b,#146a44);
+  color:white;
+  border:1px solid rgba(114,224,164,.28);
+  box-shadow:0 8px 20px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.10);
+}
+.secondary{
+  background:#17261f;
+  color:#ddd2b6;
+  border:1px solid rgba(201,165,87,.28);
+}
+.back{color:#c6b98f}
+.result{
+  background:linear-gradient(180deg,#10231b,#0b1b14);
+  border:1px solid rgba(201,165,87,.28);
+  color:#e8e5da;
+}
+.profit{letter-spacing:.01em}
+.pos{color:var(--mint)!important}
+.neg{color:var(--red)!important}
+.stat{
+  background:#0b1913;
+  border:1px solid rgba(201,165,87,.22);
+}
+.month{border-bottom:1px solid rgba(201,165,87,.16)}
+.empty{color:#859087}
+.toolbar select{background:#0b1913}
+.pill{
+  background:#0b1913;
+  color:#d8d1bd;
+  border:1px solid rgba(201,165,87,.30);
+}
+.pill.active{
+  background:linear-gradient(180deg,#187f53,#11633f);
+  color:white;
+  border-color:#48b982;
+  box-shadow:0 5px 14px rgba(0,0,0,.18);
+}
+.rankbox{
+  background:#0c1b15;
+  border:1px solid rgba(201,165,87,.21);
+  color:#eee6d1;
+}
+.chart{border-bottom-color:rgba(201,165,87,.22)}
+.bar{background:#3db57b}
+.bar.negbar{background:#d85952}
+.summary div{
+  background:#0b1913;
+  border:1px solid rgba(201,165,87,.20);
+}
+.danger{
+  background:#1d1212;
+  color:#ff8d86;
+  border-color:#6b302d;
+}
+.gameNo{color:#65d99c}
+.chipBtn{
+  background:#0b1913;
+  color:#72cf9c;
+  border-color:rgba(201,165,87,.34);
+}
+.chipValueBox{
+  background:#0b1913;
+  color:#f1ead8;
+  border-color:rgba(201,165,87,.34);
+}
+.scoreSuffix{color:#a99c79}
+.rankBtn{
+  background:#0b1913;
+  color:#eee5cc;
+  border-color:rgba(201,165,87,.32);
+}
+.rankBtn.active{
+  background:linear-gradient(180deg,#1b8a59,#126c45);
+  color:white;
+  border-color:#58cb8f;
+  box-shadow:0 5px 14px rgba(0,0,0,.22);
+}
+.moreBtn{
+  background:#0b1913;
+  color:var(--gold2);
+  border-color:rgba(201,165,87,.40);
+}
+.swipeWrap{border-bottom-color:rgba(201,165,87,.16)}
+.swipeRow{background:transparent}
+.swipeDelete{background:#9f302b}
+#history .month small{color:#aab2ab}
+#history .month b small{color:#9ba49d!important}
+#storeBreakdown .month small{color:#9ba49d}
+a{color:var(--gold2)}
+::-webkit-calendar-picker-indicator{filter:invert(82%) sepia(40%) saturate(500%) hue-rotate(356deg) brightness(90%)}
+@media(max-width:520px){
+  main{padding:12px}
+  .card{border-radius:14px;padding:16px}
+}
+
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v5.2</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v5.3</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -150,7 +324,7 @@ const today=localToday();
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma)}));
-/* v5.2: known Cabo settings correction from the user's confirmed rules */
+/* v5.3: known Cabo settings correction from the user's confirmed rules */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
     return {...s,pointRate:100,startPoints:25000,returnPoints:30000,gameFee:600,topFee:(s.topFee==null?0:+s.topFee),umaType:"1-3"};
