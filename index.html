@@ -22,7 +22,7 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支</header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v3.2</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -45,7 +45,7 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 <div class="field"><label>ゲーム代（円/ゲーム）</label><input id="gameFee" type="number" value="500"></div>
 <div class="field"><label>トップ賞等（円/ゲーム）</label><input id="topFee" type="number" value="0"></div>
 </div>
-<div class="field"><label>返し点</label><input id="returnPoints" type="number" value="25000"></div>
+<div class="grid"><div class="field"><label>持ち点</label><input id="startPoints" type="number" value="25000"></div><div class="field"><label>返し点</label><input id="returnPoints" type="number" value="30000"></div></div>
 <div class="field"><label>ウマ</label><select id="umaType">
 <option value="1-2">1-2（ワンツー）</option><option value="1-3">1-3（ワンスリー）</option>
 <option value="2-3">2-3（ツースリー）</option><option value="2-4">2-4（ツーフォー）</option>
@@ -96,23 +96,49 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 <script>
 const $=id=>document.getElementById(id);
 let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="day";
-try{stores=JSON.parse(localStorage.getItem("fm_stores")||"[]");records=JSON.parse(localStorage.getItem("fm_records")||"[]")}catch(e){stores=[];records=[]}
+const rawStores=localStorage.getItem("fm_stores"), rawRecords=localStorage.getItem("fm_records");
+// 読み込み時は絶対に空データで上書きしない。既存データは退避してから扱う。
+try{stores=JSON.parse(rawStores||"[]");records=JSON.parse(rawRecords||"[]")}catch(e){stores=[];records=[]}
+if(rawStores && rawStores!=="[]" && !localStorage.getItem("fm_stores_backup")) localStorage.setItem("fm_stores_backup",rawStores);
+if(rawRecords && rawRecords!=="[]" && !localStorage.getItem("fm_records_backup")) localStorage.setItem("fm_records_backup",rawRecords);
 const localToday=()=>{const d=new Date(),z=d.getTimezoneOffset()*60000;return new Date(d-z).toISOString().slice(0,10)};
 const today=localToday();
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
-stores=stores.map(s=>({...s,id:s.id||uid(),umaType:s.umaType||guessUma(s.uma)}));
-records=records.map(r=>{const s=stores.find(x=>x.id===r.storeId)||stores.find(x=>x.shop===r.shop);const games=+r.games||1;const fee=s?(+s.gameFee||0)+(+s.topFee||0):0;return {...r,id:r.id||uid(),storeId:r.storeId||(s&&s.id)||"",gross:r.gross!=null?+r.gross:(+r.total||0)+fee*games,games:games}});
-saveAll();
+stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,umaType:s.umaType||guessUma(s.uma)}));
+/* v3.2: known Cabo settings correction from the user's confirmed rules */
+stores=stores.map(s=>{
+  if(s.shop==="麻雀カボ船橋店"){
+    return {...s,pointRate:100,startPoints:25000,returnPoints:30000,gameFee:600,topFee:0,umaType:"1-3"};
+  }
+  return s;
+});
+records=records.map(r=>{const st=stores.find(x=>x.id===r.storeId)||stores.find(x=>x.shop===r.shop);const games=+r.games||1;const fee=st?(+st.gameFee||0)+(+st.topFee||0):0;return {...r,id:r.id||uid(),storeId:r.storeId||(st&&st.id)||"",gross:r.gross!=null?+r.gross:(+r.total||0)+fee,games:games}});
+// 2026-09-21に消失したことを確認済みの2局を一度だけ復元。
+if(!localStorage.getItem("fm_recovered_20260921") && records.length===0){
+  let st=stores.find(x=>x.shop==="麻雀カボ船橋店");
+  if(!st){st={id:uid(),shop:"麻雀カボ船橋店",players:4,pointRate:100,chipValue:500,gameFee:600,topFee:0,startPoints:25000,returnPoints:30000,umaType:"1-3",memo:""};stores.push(st)}
+  records=[1,2].map(n=>({id:uid(),date:"2026-09-21",shop:st.shop,storeId:st.id,total:2500,gross:3000,rank:1,points:30000,chips:0,games:1,players:4,recovered:true}));
+  localStorage.setItem("fm_stores",JSON.stringify(stores));localStorage.setItem("fm_records",JSON.stringify(records));localStorage.setItem("fm_recovered_20260921","1");
+}
 $("gameDate").value=today;
 
 function guessUma(a){if(!Array.isArray(a))return"1-2";const v=a.map(x=>Math.abs(+x));if(v.includes(4000)||v.includes(4))return"2-4";if(v.includes(3000)||v.includes(3)){return (v.includes(2000)||v.includes(2))?"2-3":"1-3"}return"1-2"}
-function saveAll(){localStorage.setItem("fm_stores",JSON.stringify(stores));localStorage.setItem("fm_records",JSON.stringify(records))}
+function saveAll(){
+ const oldS=localStorage.getItem("fm_stores"),oldR=localStorage.getItem("fm_records");
+ if(oldS&&oldS!=="[]")localStorage.setItem("fm_stores_backup",oldS);
+ if(oldR&&oldR!=="[]")localStorage.setItem("fm_records_backup",oldR);
+ localStorage.setItem("fm_stores",JSON.stringify(stores));localStorage.setItem("fm_records",JSON.stringify(records));
+}
 function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));$(id).classList.add("active");if(id==="home")renderStores();window.scrollTo(0,0)}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function fmt(n){n=Math.round(+n||0);return(n>=0?"+":"")+n.toLocaleString()+"円"}
 function storeForRecord(r){return stores.find(s=>s.id===r.storeId)||stores.find(s=>s.shop===r.shop)}
 function umaUnits(type){return {"1-2":[2,1,-1,-2],"1-3":[3,1,-1,-3],"2-3":[3,2,-2,-3],"2-4":[4,2,-2,-4]}[type]||[2,1,-1,-2]}
-function umaYen(s,rank){return (umaUnits(s.umaType)[rank-1]||0)*1000*(+s.pointRate||0)}
+function umaYen(s,rank){return (umaUnits(s.umaType)[rank-1]||0)*1000}
+function okaYen(s,rank){
+ const players=+s.players||4,start=+s.startPoints||25000,ret=+s.returnPoints||30000,rate=+s.pointRate||0;
+ return rank===1?Math.round((ret-start)*players/1000*rate):0;
+}
 function feePerGame(s){return (+s.gameFee||0)+(+s.topFee||0)}
 function recGross(r){if(r.gross!=null)return +r.gross||0;const s=storeForRecord(r);return (+r.total||0)+(s?feePerGame(s)*(+r.games||1):0)}
 function gameNumber(r,idx){const same=records.map((x,i)=>({x,i})).filter(o=>o.x.date===r.date && (o.x.storeId===r.storeId || (!o.x.storeId&&o.x.shop===r.shop))).sort((a,b)=>a.i-b.i);return same.findIndex(o=>o.i===idx)+1}
@@ -124,22 +150,22 @@ function renderStores(){
  box.innerHTML=stores.map((s,i)=>`<div><button class="store" type="button" onclick="selectStore(${i})">${esc(s.shop)}<small>${s.players==4?"四麻":"三麻"} / ${s.pointRate||"-"}円/1000点 / ウマ${esc(s.umaType)} / チップ${s.chipValue}円 / ゲーム代${s.gameFee}円</small></button><button class="edit" type="button" onclick="editStore(${i})">編集</button></div>`).join("");
 }
 function openNewStore(){editStoreIndex=-1;$("registerTitle").textContent="店舗を登録";clearForm();show("register")}
-function clearForm(){["shop","memo"].forEach(id=>$(id).value="");$("players").value="4";$("pointRate").value="";$("chipValue").value="500";$("gameFee").value="500";$("topFee").value="0";$("returnPoints").value="25000";$("umaType").value="1-2"}
-function editStore(i){editStoreIndex=i;const s=stores[i];$("registerTitle").textContent="店舗設定を編集";$("shop").value=s.shop;$("players").value=s.players;$("pointRate").value=s.pointRate;$("chipValue").value=s.chipValue;$("gameFee").value=s.gameFee;$("topFee").value=s.topFee;$("returnPoints").value=s.returnPoints;$("umaType").value=s.umaType||"1-2";$("memo").value=s.memo||"";show("register")}
+function clearForm(){["shop","memo"].forEach(id=>$(id).value="");$("players").value="4";$("pointRate").value="";$("chipValue").value="500";$("gameFee").value="600";$("topFee").value="0";$("startPoints").value="25000";$("returnPoints").value="30000";$("umaType").value="1-2"}
+function editStore(i){editStoreIndex=i;const s=stores[i];$("registerTitle").textContent="店舗設定を編集";$("shop").value=s.shop;$("players").value=s.players;$("pointRate").value=s.pointRate;$("chipValue").value=s.chipValue;$("gameFee").value=s.gameFee;$("topFee").value=s.topFee;$("startPoints").value=s.startPoints||25000;$("returnPoints").value=s.returnPoints;$("umaType").value=s.umaType||"1-2";$("memo").value=s.memo||"";show("register")}
 function saveStore(){
  const name=$("shop").value.trim();if(!name){alert("店舗名を入力してください。");return}
  if($("pointRate").value===""){alert("点数レートを入力してください。");return}
  const old=editStoreIndex>=0?stores[editStoreIndex]:null;
- const s={id:old?.id||uid(),shop:name,players:+$("players").value,pointRate:+$("pointRate").value,chipValue:+$("chipValue").value,gameFee:+$("gameFee").value,topFee:+$("topFee").value,returnPoints:+$("returnPoints").value,umaType:$("umaType").value,memo:$("memo").value};
+ const s={id:old?.id||uid(),shop:name,players:+$("players").value,pointRate:+$("pointRate").value,chipValue:+$("chipValue").value,gameFee:+$("gameFee").value,topFee:+$("topFee").value,startPoints:+$("startPoints").value,returnPoints:+$("returnPoints").value,umaType:$("umaType").value,memo:$("memo").value};
  if(editStoreIndex>=0){stores[editStoreIndex]=s;records.forEach(r=>{if(r.storeId===s.id)r.shop=s.shop})}else stores.push(s);
  saveAll();editStoreIndex=-1;alert("店舗を保存しました。");show("home");
 }
 function selectStore(i){
- selected=stores[i];editRecordIndex=-1;setupGameScreen();$("gameDate").value=today;$("points").value=selected.returnPoints;$("chips").value=0;$("rank").value="1";updateGameNo();show("game");calc();
+ selected=stores[i];editRecordIndex=-1;setupGameScreen();$("gameDate").value=today;$("points").value=selected.startPoints||25000;$("chips").value=0;$("rank").value="1";updateGameNo();show("game");calc();
 }
 function setupGameScreen(){
  $("gameTitle").textContent=selected.shop+" の対局入力";
- $("ruleNote").textContent=`${selected.players==4?"四麻":"三麻"} / ${selected.pointRate}円/1000点 / ウマ${selected.umaType} / ゲーム代${selected.gameFee}円 / チップ${selected.chipValue}円`;
+ $("ruleNote").textContent=`${selected.players==4?"四麻":"三麻"} / ${selected.pointRate}円/1000点 / ${selected.startPoints||25000}点持ち・${selected.returnPoints}点返し / ウマ${selected.umaType} / ゲーム代${selected.gameFee}円 / チップ${selected.chipValue}円`;
  $("rank").innerHTML=Array.from({length:selected.players},(_,i)=>`<option value="${i+1}">${i+1}着</option>`).join("");
  $("inputTitle").textContent=editRecordIndex>=0?"対局記録を編集":"対局入力";$("recordBtn").textContent=editRecordIndex>=0?"変更を保存":"この結果を記録";$("deleteBtn").style.display=editRecordIndex>=0?"block":"none";
  renderStoreQuickStats();
@@ -151,9 +177,9 @@ function renderStoreQuickStats(){
 function updateGameNo(){if(!selected)return;$("gameNo").textContent=`この日は ${nextGameNumber($("gameDate").value||today,selected.id,editRecordIndex)}ゲーム目`}
 function calc(){
  if(!selected)return;const p=+$("points").value||0,r=+$("rank").value||1,c=+$("chips").value||0;
- const score=(p-(+selected.returnPoints||0))/1000*(+selected.pointRate||0),uma=umaYen(selected,r),chip=c*(+selected.chipValue||0),gross=Math.round(score+uma+chip),fee=-feePerGame(selected),total=Math.round(gross+fee);
+ const score=(p-(+selected.returnPoints||0))/1000*(+selected.pointRate||0),oka=okaYen(selected,r),uma=umaYen(selected,r),chip=c*(+selected.chipValue||0),gross=Math.round(score+oka+uma+chip),fee=-(+selected.gameFee||0),extraFee=-(+selected.topFee||0),total=Math.round(gross+fee+extraFee);
  $("calc").textContent=fmt(total);$("calc").className="profit "+(total>=0?"pos":"neg");
- $("breakdown").innerHTML=`点数 ${fmt(score)} ＋ ウマ ${fmt(uma)} ＋ チップ ${fmt(chip)}<br>ゲーム代抜き ${fmt(gross)} ／ ゲーム代等 ${fmt(fee)}`;
+ $("breakdown").innerHTML=`素点 ${fmt(score)} ＋ オカ ${fmt(oka)} ＋ ウマ ${fmt(uma)} ＋ チップ ${fmt(chip)}<br>ゲーム代抜き ${fmt(gross)} ／ ゲーム代 ${fmt(fee)}${extraFee?` ／ その他店舗料金 ${fmt(extraFee)}`:""}`;
  return {total,gross};
 }
 ["gameDate","rank","points","chips"].forEach(id=>$(id).addEventListener("input",()=>{if(id==="gameDate")updateGameNo();calc()}));
