@@ -44,7 +44,7 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 .moreBtn{width:100%;margin-top:12px;background:#fff;color:#18794e;border:1px solid #cfd8d3;border-radius:10px;padding:12px;font-weight:800}
 .scoreInput{font-size:18px;line-height:1.2;padding-left:14px;padding-right:50px}
 
-/* v6.6 Heavy / premium mahjong theme */
+/* v6.7 Heavy / premium mahjong theme */
 :root{
   --bg:#07110d;
   --bg2:#0b1a14;
@@ -268,7 +268,7 @@ a{color:var(--gold2)}
 .statsBackTop .back{padding-bottom:0}
 
 
-/* v6.6 form/layout fixes */
+/* v6.7 form/layout fixes */
 .field{min-width:0}
 .grid>*{min-width:0}
 input,select,button{max-width:100%}
@@ -350,7 +350,7 @@ input,select{min-width:0}
 .statsNavTop #nextGameFromStats .primary{margin:0}
 
 
-/* v6.6 iOS overflow hardening */
+/* v6.7 iOS overflow hardening */
 #gameDate,
 #rankMonthInput,
 #rankYearSelect{
@@ -421,7 +421,7 @@ input,select{min-width:0}
 }
 
 
-/* v6.6 chip layout + reactive calculation fixes */
+/* v6.7 chip layout + reactive calculation fixes */
 .scoreChipRow{
   grid-template-columns:minmax(150px,170px) minmax(0,1fr) !important;
   gap:10px !important;
@@ -466,7 +466,7 @@ input,select{min-width:0}
 }
 
 
-/* v6.6 final mobile alignment fix */
+/* v6.7 final mobile alignment fix */
 .scoreChipRow{
   display:grid !important;
   grid-template-columns:145px minmax(0,1fr) !important;
@@ -536,7 +536,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v6.6</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v6.7</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -651,7 +651,7 @@ rankMonth=today.slice(0,7);rankYear=today.slice(0,4);
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma)}));
-/* v6.6: known Cabo settings correction from the user's confirmed rules */
+/* v6.7: known Cabo settings correction from the user's confirmed rules */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
     return {...s,pointRate:100,startPoints:25000,returnPoints:30000,gameFee:600,topFee:(s.topFee==null?0:+s.topFee),umaType:"1-3"};
@@ -772,8 +772,8 @@ function renderChipDisplay(){const v=Math.max(-10,Math.min(10,+$("chips").value|
 function changeChips(d){
  ensureSelectedStore();
  const el=$("chips");
- const next=Math.max(-10,Math.min(10,(+el.value||0)+d));
- el.value=next;
+ const next=Math.max(-10,Math.min(10,(Number(el.value)||0)+d));
+ el.value=String(next);
  renderChipDisplay();
  calc();
 }
@@ -860,24 +860,59 @@ function renderGameFeeFree(){
 function toggleGameFeeFree(){gameFeeFree=!gameFeeFree;renderGameFeeFree();calc()}
 
 function calc(){
- renderTodayRankSummary();
- renderGameTodayRanks();
  updateScoreSuffix();
  ensureSelectedStore();
- if(!selected)return;
- if($("points").value===""){
-   $("calc").textContent="—";
-   $("calc").className="profit";
-   $("breakdown").innerHTML='<span class="note">最終持ち点を入力してください。</span>';
+
+ const calcEl=$("calc"), breakdownEl=$("breakdown");
+ if(!calcEl||!breakdownEl)return {total:0,gross:0};
+
+ if(!selected){
+   calcEl.textContent="—";
+   breakdownEl.textContent="店舗を選択してください。";
+   return {total:0,gross:0};
+ }
+
+ const rawPoints=$("points")?.value ?? "";
+ if(rawPoints===""){
+   calcEl.textContent="—";
+   calcEl.className="profit";
+   breakdownEl.innerHTML='<span class="note">最終持ち点を入力してください。</span>';
+   try{renderTodayRankSummary();renderGameTodayRanks()}catch(e){}
    return {total:0,gross:0,emptyPoints:true};
  }
- const rawPoints=$("points").value;
+
  const p=Number(rawPoints)*100;
- const r=Number($("rank").value||1);
- const c=Number($("chips").value||0);
- const score=(p-(+selected.returnPoints||0))/1000*(+selected.pointRate||0),oka=okaYen(selected,r),uma=umaYen(selected,r),chip=c*(+selected.chipValue||0),gross=Math.round(score+oka+uma+chip),fee=gameFeeFree?0:-(+selected.gameFee||0),extraFee=r===1?-(+selected.topFee||0):0,tobi=((selected.belowZero==="yes"&&p<0)||(selected.belowZero!=="yes"&&p<=0))?-(+selected.tobiAmount||0):0,total=Math.round(gross+fee+extraFee+tobi);
- $("calc").textContent=fmt(total);$("calc").className="profit "+(total>=0?"pos":"neg");
- $("breakdown").innerHTML=`素点 ${fmt(score)} ＋ オカ ${fmt(oka)} ＋ ウマ ${fmt(uma)} ＋ チップ ${fmt(chip)}<br>ゲーム代抜き ${fmt(gross)} ／ ゲーム代 ${fmt(fee)}${extraFee?` ／ トップ賞 ${fmt(extraFee)}`:""}${tobi?` ／ トビ賞 ${fmt(tobi)}`:""}`;
+ const r=Number($("rank")?.value||1);
+ const c=Number($("chips")?.value||0);
+
+ const pointRate=Number(selected.pointRate||0);
+ const returnPoints=Number(selected.returnPoints||30000);
+ const chipValue=Number(selected.chipValue||0);
+ const gameFee=Number(selected.gameFee||0);
+ const topFee=Number(selected.topFee||0);
+ const tobiAmount=Number(selected.tobiAmount||0);
+
+ const score=(p-returnPoints)/1000*pointRate;
+ const oka=okaYen(selected,r);
+ const uma=umaYen(selected,r);
+ const chip=c*chipValue;
+ const gross=Math.round(score+oka+uma+chip);
+ const fee=gameFeeFree?0:-gameFee;
+ const extraFee=r===1?-topFee:0;
+ const tobi=((selected.belowZero==="yes"&&p<0)||(selected.belowZero!=="yes"&&p<=0))?-tobiAmount:0;
+ const total=Math.round(gross+fee+extraFee+tobi);
+
+ calcEl.textContent=fmt(total);
+ calcEl.className="profit "+(total>=0?"pos":"neg");
+ breakdownEl.innerHTML=`素点 ${fmt(score)} ＋ オカ ${fmt(oka)} ＋ ウマ ${fmt(uma)} ＋ チップ ${fmt(chip)}<br>ゲーム代抜き ${fmt(gross)} ／ ゲーム代 ${fmt(fee)}${extraFee?` ／ トップ賞 ${fmt(extraFee)}`:""}${tobi?` ／ トビ賞 ${fmt(tobi)}`:""}`;
+
+ try{
+   renderTodayRankSummary();
+   renderGameTodayRanks();
+ }catch(e){
+   console.warn("summary render skipped",e);
+ }
+
  return {total,gross};
 }
 $("belowZero").addEventListener("change",toggleTobiField);
