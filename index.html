@@ -44,7 +44,7 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 .moreBtn{width:100%;margin-top:12px;background:#fff;color:#18794e;border:1px solid #cfd8d3;border-radius:10px;padding:12px;font-weight:800}
 .scoreInput{font-size:18px;line-height:1.2;padding-left:14px;padding-right:50px}
 
-/* v6.4 Heavy / premium mahjong theme */
+/* v6.5 Heavy / premium mahjong theme */
 :root{
   --bg:#07110d;
   --bg2:#0b1a14;
@@ -268,7 +268,7 @@ a{color:var(--gold2)}
 .statsBackTop .back{padding-bottom:0}
 
 
-/* v6.4 form/layout fixes */
+/* v6.5 form/layout fixes */
 .field{min-width:0}
 .grid>*{min-width:0}
 input,select,button{max-width:100%}
@@ -350,7 +350,7 @@ input,select{min-width:0}
 .statsNavTop #nextGameFromStats .primary{margin:0}
 
 
-/* v6.4 iOS overflow hardening */
+/* v6.5 iOS overflow hardening */
 #gameDate,
 #rankMonthInput,
 #rankYearSelect{
@@ -421,7 +421,7 @@ input,select{min-width:0}
 }
 
 
-/* v6.4 chip layout + reactive calculation fixes */
+/* v6.5 chip layout + reactive calculation fixes */
 .scoreChipRow{
   grid-template-columns:minmax(150px,170px) minmax(0,1fr) !important;
   gap:10px !important;
@@ -465,10 +465,78 @@ input,select{min-width:0}
   }
 }
 
+
+/* v6.5 final mobile alignment fix */
+.scoreChipRow{
+  display:grid !important;
+  grid-template-columns:145px minmax(0,1fr) !important;
+  gap:8px !important;
+  width:100% !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+}
+.scoreField,.chipField{
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+}
+.scoreInputWrap{
+  width:145px !important;
+  max-width:145px !important;
+  grid-template-columns:minmax(0,1fr) 52px !important;
+  box-sizing:border-box !important;
+}
+.chipField .chipStepper{
+  display:grid !important;
+  grid-template-columns:40px minmax(54px,1fr) 40px !important;
+  gap:5px !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+}
+.chipBtn{
+  width:40px !important;
+  min-width:40px !important;
+  max-width:40px !important;
+  height:48px !important;
+  padding:0 !important;
+  box-sizing:border-box !important;
+}
+.chipValueBox{
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  padding-left:4px !important;
+  padding-right:4px !important;
+  box-sizing:border-box !important;
+}
+@media(max-width:390px){
+  .scoreChipRow{
+    grid-template-columns:135px minmax(0,1fr) !important;
+    gap:7px !important;
+  }
+  .scoreInputWrap{
+    width:135px !important;
+    max-width:135px !important;
+    grid-template-columns:minmax(0,1fr) 50px !important;
+  }
+  .chipField .chipStepper{
+    grid-template-columns:38px minmax(50px,1fr) 38px !important;
+    gap:4px !important;
+  }
+  .chipBtn{
+    width:38px !important;
+    min-width:38px !important;
+    max-width:38px !important;
+  }
+}
+
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v6.4</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v6.5</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -583,7 +651,7 @@ rankMonth=today.slice(0,7);rankYear=today.slice(0,4);
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma)}));
-/* v6.4: known Cabo settings correction from the user's confirmed rules */
+/* v6.5: known Cabo settings correction from the user's confirmed rules */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
     return {...s,pointRate:100,startPoints:25000,returnPoints:30000,gameFee:600,topFee:(s.topFee==null?0:+s.topFee),umaType:"1-3"};
