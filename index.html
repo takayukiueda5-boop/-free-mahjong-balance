@@ -17,12 +17,12 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 .historyRow{width:100%;border:0;background:transparent;text-align:left;padding:0;color:inherit}.historyRow .month{align-items:center}.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:14px}.toolbar select{flex:1}.pillrow{display:flex;gap:7px;margin-bottom:14px}.pill{flex:1;border:1px solid #ddd;background:#fff;border-radius:999px;padding:9px 5px;font-size:13px}.pill.active{background:#202124;color:#fff;border-color:#202124}
 .rankgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 16px}.rankbox{background:#f7f7f7;border-radius:10px;padding:10px 5px;text-align:center}.rankbox b{display:block;font-size:20px}
 .chart{display:flex;align-items:flex-end;gap:10px;height:180px;padding:12px 4px 0;border-bottom:1px solid #ddd}.barwrap{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;min-width:0}.barvalue{font-size:11px;margin-bottom:4px;white-space:nowrap}.bar{width:70%;max-width:52px;background:#18794e;border-radius:6px 6px 0 0;min-height:2px}.bar.negbar{background:#b42318}.barlabel{font-size:11px;margin-top:5px;white-space:nowrap}.summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.summary div{background:#f7f7f7;border-radius:10px;padding:10px}.summary b{display:block;font-size:18px;margin-top:3px}
-.danger{width:100%;margin-top:10px;background:#fff;color:#b42318;border:1px solid #e6b8b3;border-radius:10px;padding:12px;font-weight:700}.gameNo{font-size:14px;font-weight:800;color:#18794e;margin:-5px 0 14px}
+.danger{width:100%;margin-top:10px;background:#fff;color:#b42318;border:1px solid #e6b8b3;border-radius:10px;padding:12px;font-weight:700}.gameNo{font-size:14px;font-weight:800;color:#18794e;margin:-5px 0 14px}.chipStepper{display:grid;grid-template-columns:56px 1fr 56px;gap:8px;align-items:center}.chipBtn{height:48px;border:1px solid #ccc;background:#f7f7f7;border-radius:10px;font-size:26px;font-weight:800}.chipValueBox{text-align:center;border:1px solid #ccc;border-radius:9px;padding:12px 6px;font-size:18px;font-weight:800;background:#fff}
 @media(max-width:420px){.rankgrid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v3.5</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v3.8</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -66,7 +66,7 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 <div class="field"><label>対局日</label><input id="gameDate" type="date"></div>
 <div id="gameNo" class="gameNo"></div>
 <div class="field"><label>着順</label><select id="rank"></select></div>
-<div class="grid"><div class="field"><label>最終持ち点</label><input id="points" type="number"></div><div class="field"><label>獲得チップ</label><input id="chips" type="number" value="0"></div></div>
+<div class="grid"><div class="field"><label>最終持ち点（百点単位）</label><input id="points" type="number" step="1" inputmode="numeric"><div class="note" id="pointsPreview" style="margin-top:6px"></div></div><div class="field"><label>獲得チップ</label><div class="chipStepper"><button class="chipBtn" type="button" onclick="changeChips(-1)">−</button><div id="chipDisplay" class="chipValueBox">0枚</div><button class="chipBtn" type="button" onclick="changeChips(1)">＋</button></div><input id="chips" type="hidden" value="0"></div></div>
 <div class="result"><div class="note">今回の実収支（ゲーム代込み）</div><div class="profit" id="calc">0円</div><div id="breakdown"></div></div>
 <button class="primary" style="margin-top:12px" type="button" onclick="recordGame()" id="recordBtn">この結果を記録</button>
 <button class="danger" type="button" id="deleteBtn" style="display:none" onclick="deleteRecord()">この対局記録を削除</button>
@@ -74,6 +74,7 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 </section>
 
 <section id="stats" class="screen">
+<div class="card"><h2>最近の対局</h2><div class="note" style="margin-bottom:8px">タップすると内容を編集できます。</div><div id="history"></div></div>
 <div class="card"><button class="back" type="button" onclick="show('home')">← 店舗選択へ戻る</button><h2>成績</h2>
 <div class="toolbar"><select id="statsStore" onchange="renderStats()"></select></div>
 <div class="statgrid">
@@ -90,7 +91,7 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 <div id="rankSummary"></div><div id="rankChart" class="chart"></div></div>
 
 <div class="card"><h2>月別収支（棒グラフ）</h2><div id="monthlyChart" class="chart"></div><div id="monthly"></div></div>
-<div class="card"><h2>最近の対局</h2><div class="note" style="margin-bottom:8px">タップすると内容を編集できます。</div><div id="history"></div></div>
+
 </section>
 </main>
 <script>
@@ -105,7 +106,7 @@ const localToday=()=>{const d=new Date(),z=d.getTimezoneOffset()*60000;return ne
 const today=localToday();
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma)}));
-/* v3.5: known Cabo settings correction from the user's confirmed rules */
+/* v3.8: known Cabo settings correction from the user's confirmed rules */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
     return {...s,pointRate:100,startPoints:25000,returnPoints:30000,gameFee:600,topFee:0,umaType:"1-3"};
@@ -162,7 +163,7 @@ function saveStore(){
  saveAll();editStoreIndex=-1;alert("店舗を保存しました。");show("home");
 }
 function selectStore(i){
- selected=stores[i];editRecordIndex=-1;setupGameScreen();$("gameDate").value=today;$("points").value=selected.startPoints||25000;$("chips").value=0;$("rank").value="1";updateGameNo();show("game");calc();
+ selected=stores[i];editRecordIndex=-1;setupGameScreen();$("gameDate").value=today;$("points").value=Math.round((selected.startPoints||25000)/100);updatePointsPreview();$("chips").value=0;renderChipDisplay();$("rank").value="1";updateGameNo();show("game");calc();
 }
 function setupGameScreen(){
  $("gameTitle").textContent=selected.shop+" の対局入力";
@@ -176,24 +177,27 @@ function renderStoreQuickStats(){
  $("storeQuickStats").innerHTML=`<div>累計・ゲーム代込み<b class="${net>=0?'pos':'neg'}">${fmt(net)}</b></div><div>累計・ゲーム代抜き<b class="${gross>=0?'pos':'neg'}">${fmt(gross)}</b></div>`;
 }
 function updateGameNo(){if(!selected)return;$("gameNo").textContent=`この日は ${nextGameNumber($("gameDate").value||today,selected.id,editRecordIndex)}ゲーム目`}
+function renderChipDisplay(){const v=Math.max(-10,Math.min(10,+$("chips").value||0));$("chips").value=v;if($("chipDisplay"))$("chipDisplay").textContent=(v>0?"+":"")+v+"枚";}
+function changeChips(d){const v=Math.max(-10,Math.min(10,(+$("chips").value||0)+d));$("chips").value=v;renderChipDisplay();calc();}
+function updatePointsPreview(){if($("pointsPreview")){const v=(+$("points").value||0)*100;$("pointsPreview").textContent=`入力値 → ${v.toLocaleString()}点`;}}
 function calc(){
- if(!selected)return;const p=+$("points").value||0,r=+$("rank").value||1,c=+$("chips").value||0;
+ if(!selected)return;const p=(+$("points").value||0)*100,r=+$("rank").value||1,c=+$("chips").value||0;
  const score=(p-(+selected.returnPoints||0))/1000*(+selected.pointRate||0),oka=okaYen(selected,r),uma=umaYen(selected,r),chip=c*(+selected.chipValue||0),gross=Math.round(score+oka+uma+chip),fee=-(+selected.gameFee||0),extraFee=r===1?-(+selected.topFee||0):0,tobi=(selected.belowZero==="yes"&&p<0)?-(+selected.tobiAmount||0):0,total=Math.round(gross+fee+extraFee+tobi);
  $("calc").textContent=fmt(total);$("calc").className="profit "+(total>=0?"pos":"neg");
  $("breakdown").innerHTML=`素点 ${fmt(score)} ＋ オカ ${fmt(oka)} ＋ ウマ ${fmt(uma)} ＋ チップ ${fmt(chip)}<br>ゲーム代抜き ${fmt(gross)} ／ ゲーム代 ${fmt(fee)}${extraFee?` ／ トップ賞 ${fmt(extraFee)}`:""}${tobi?` ／ トビ賞 ${fmt(tobi)}`:""}`;
  return {total,gross};
 }
 $("belowZero").addEventListener("change",toggleTobiField);
-["gameDate","rank","points","chips"].forEach(id=>$(id).addEventListener("input",()=>{if(id==="gameDate")updateGameNo();calc()}));
+["gameDate","rank","points"].forEach(id=>$(id).addEventListener("input",()=>{if(id==="gameDate")updateGameNo();if(id==="points")updatePointsPreview();calc()}));
 function recordGame(){
- if(!selected)return;if(selected.belowZero!=="yes" && (+$("points").value||0)<0){alert("この店舗は箱下計算「無」のため、マイナス点は入力できません。");return;}const {total,gross}=calc(),r=+$("rank").value||1,p=+$("points").value||0,c=+$("chips").value||0,date=$("gameDate").value||today;
+ if(!selected)return;if(selected.belowZero!=="yes" && ((+$("points").value||0)*100)<0){alert("この店舗は箱下計算「無」のため、マイナス点は入力できません。");return;}const {total,gross}=calc(),r=+$("rank").value||1,p=(+$("points").value||0)*100,c=+$("chips").value||0,date=$("gameDate").value||today;
  const obj={id:editRecordIndex>=0?records[editRecordIndex].id:uid(),date,shop:selected.shop,storeId:selected.id,total,gross,rank:r,points:p,chips:c,games:1,players:selected.players};
  if(editRecordIndex>=0)records[editRecordIndex]=obj;else records.push(obj);
  saveAll();const msg=editRecordIndex>=0?"変更を保存しました":"記録しました";editRecordIndex=-1;alert(`${msg}：${fmt(total)}`);showStats(selected.id);
 }
 function editRecord(i){
  const r=records[i],s=storeForRecord(r);if(!s){alert("この記録の店舗設定が見つかりません。");return}
- selected=s;editRecordIndex=i;setupGameScreen();$("gameDate").value=r.date;$("rank").value=String(r.rank);$("points").value=r.points;$("chips").value=r.chips||0;updateGameNo();show("game");calc();
+ selected=s;editRecordIndex=i;setupGameScreen();$("gameDate").value=r.date;$("rank").value=String(r.rank);$("points").value=Math.round((+r.points||0)/100);updatePointsPreview();$("chips").value=Math.max(-10,Math.min(10,+r.chips||0));renderChipDisplay();updateGameNo();show("game");calc();
 }
 function deleteRecord(){if(editRecordIndex<0)return;if(!confirm("この対局記録を削除しますか？"))return;records.splice(editRecordIndex,1);saveAll();editRecordIndex=-1;showStats(selected?.id||"all")}
 function cancelGameEdit(){editRecordIndex=-1;show("home")}
