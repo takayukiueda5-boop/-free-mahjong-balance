@@ -44,7 +44,7 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 .moreBtn{width:100%;margin-top:12px;background:#fff;color:#18794e;border:1px solid #cfd8d3;border-radius:10px;padding:12px;font-weight:800}
 .scoreInput{font-size:18px;line-height:1.2;padding-left:14px;padding-right:50px}
 
-/* v6.1 Heavy / premium mahjong theme */
+/* v6.2 Heavy / premium mahjong theme */
 :root{
   --bg:#07110d;
   --bg2:#0b1a14;
@@ -268,7 +268,7 @@ a{color:var(--gold2)}
 .statsBackTop .back{padding-bottom:0}
 
 
-/* v6.1 form/layout fixes */
+/* v6.2 form/layout fixes */
 .field{min-width:0}
 .grid>*{min-width:0}
 input,select,button{max-width:100%}
@@ -349,10 +349,67 @@ input,select{min-width:0}
 .statsNavTop #nextGameFromStats{margin:0}
 .statsNavTop #nextGameFromStats .primary{margin:0}
 
+
+/* v6.2 iOS overflow hardening */
+#gameDate,
+#rankMonthInput,
+#rankYearSelect{
+  display:block;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
+}
+
+#gameDate{
+  -webkit-appearance:none;
+  appearance:none;
+  padding-left:14px !important;
+  padding-right:42px !important;
+}
+
+#rankMonthInput{
+  -webkit-appearance:none;
+  appearance:none;
+  padding-left:14px !important;
+  padding-right:14px !important;
+}
+
+#rankYearSelect{
+  padding-left:14px !important;
+  padding-right:36px !important;
+}
+
+.rankPeriodControls,
+.rankPeriodControls .field,
+.rankPeriodControls input,
+.rankPeriodControls select{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+
+#game .field{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  overflow:hidden;
+}
+
+/* Remove divider between entered hundreds and fixed 00 suffix */
+.scoreInput{
+  border-right:0 !important;
+}
+.scoreSuffix{
+  border-left:0 !important;
+}
+
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v6.1</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v6.2</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -467,7 +524,7 @@ rankMonth=today.slice(0,7);rankYear=today.slice(0,4);
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma)}));
-/* v6.1: known Cabo settings correction from the user's confirmed rules */
+/* v6.2: known Cabo settings correction from the user's confirmed rules */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
     return {...s,pointRate:100,startPoints:25000,returnPoints:30000,gameFee:600,topFee:(s.topFee==null?0:+s.topFee),umaType:"1-3"};
