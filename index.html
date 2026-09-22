@@ -7,7 +7,7 @@
 <title>フリー麻雀収支</title>
 <style>
 *{box-sizing:border-box}html,body,button,input,select{touch-action:manipulation}body{margin:0;background:#f4f5f7;color:#222;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif}
-header{background:#202124;color:#fff;padding:17px 16px;font-weight:800;font-size:20px;position:sticky;top:0;z-index:10}main{max-width:720px;margin:auto;padding:14px}
+header{background:#202124;color:#fff;padding:17px 16px;font-weight:800;font-size:18px;position:sticky;top:0;z-index:10}main{max-width:720px;margin:auto;padding:14px}
 .screen{display:none}.screen.active{display:block}.card{background:#fff;border-radius:15px;padding:18px;margin-bottom:14px;box-shadow:0 2px 8px #0001}
 h1{font-size:24px;margin:8px 0}.sub,.note{color:#777;font-size:13px}.sub{margin-bottom:18px}h2{font-size:18px;margin:0 0 15px}
 button{font:inherit;cursor:pointer}.store{display:block;width:100%;text-align:left;background:#fff;border:1px solid #ddd;border-radius:13px;padding:16px;margin:8px 0;font-weight:700}.store small{display:block;color:#777;font-weight:400;margin-top:5px}.add{background:#202124;color:#fff}
@@ -298,12 +298,12 @@ input,select{min-width:0}
   width:100%;
   max-width:none;
   display:grid;
-  grid-template-columns:minmax(0,1fr) 58px;
+  grid-template-columns:minmax(0,1fr) 50px;
 }
 .scoreInput{
   width:100%;
   min-width:0;
-  padding:14px 10px;
+  padding:14px 8px;
   font-size:18px;
   line-height:1.2;
   border-radius:10px 0 0 10px;
@@ -338,7 +338,7 @@ input,select{min-width:0}
     grid-template-columns:minmax(128px,145px) minmax(0,1fr);
     gap:8px;
   }
-  .scoreInputWrap{grid-template-columns:minmax(0,1fr) 54px}
+  .scoreInputWrap{grid-template-columns:minmax(0,1fr) 48px}
   .chipField .chipStepper{grid-template-columns:42px minmax(56px,1fr) 42px;gap:5px}
 }
 
@@ -493,7 +493,7 @@ input,select{min-width:0}
   grid-template-columns:minmax(0,1fr) 52px !important;
   box-sizing:border-box !important;
 }
-/* v7.4: suffix is a separate grid cell, so don't reserve extra space inside the input */
+/* v7.5: suffix is a separate grid cell, so don't reserve extra space inside the input */
 .scoreInput{
   padding-right:12px !important;
 }
@@ -587,7 +587,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.4</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.5</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -660,8 +660,8 @@ input,select{min-width:0}
 <input id="chips" type="hidden" value="0">
 </div>
 </div>
-<button class="primary" style="margin:2px 0 14px" type="button" onclick="recordGame()" id="recordBtn">この結果を記録</button>
 <div id="feeFreeRow" class="feeFreeRow"><button id="feeFreeBtn" class="feeFreeBtn" type="button" onclick="toggleGameFeeFree()">ゲーム代無料：OFF</button></div>
+<button class="primary" style="margin:2px 0 14px" type="button" onclick="recordGame()" id="recordBtn">この結果を記録</button>
 <div class="result"><div class="note">今回の実収支（ゲーム代込み）</div><div class="profit" id="calc">0円</div><div id="breakdown"></div></div>
 <button class="danger" type="button" id="deleteBtn" style="display:none" onclick="deleteRecord()">この対局記録を削除</button>
 </div>
