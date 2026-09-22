@@ -493,7 +493,7 @@ input,select{min-width:0}
   grid-template-columns:minmax(0,1fr) 52px !important;
   box-sizing:border-box !important;
 }
-/* v7.5: suffix is a separate grid cell, so don't reserve extra space inside the input */
+/* v7.6: suffix is a separate grid cell, so don't reserve extra space inside the input */
 .scoreInput{
   padding-right:12px !important;
 }
@@ -584,10 +584,29 @@ input,select{min-width:0}
 .helpNote{display:none;margin-top:7px;padding:9px 10px;border-radius:9px;background:#0b1913;border:1px solid rgba(201,165,87,.22)}
 .helpNote.show{display:block}
 
+
+/* v7.6 score spacing fix */
+#game .scoreInputWrap{
+  grid-template-columns:minmax(0,1fr) 46px !important;
+}
+#game .scoreInput{
+  text-align:right !important;
+  padding-left:6px !important;
+  padding-right:6px !important;
+}
+#game .scoreSuffix{
+  width:46px !important;
+  min-width:46px !important;
+  font-size:18px !important;
+}
+@media(max-width:390px){
+  #game .scoreInputWrap{grid-template-columns:minmax(0,1fr) 44px !important;}
+  #game .scoreSuffix{width:44px !important;min-width:44px !important;}
+}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.5</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.6</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
