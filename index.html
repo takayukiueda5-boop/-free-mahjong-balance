@@ -577,7 +577,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.1</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.2</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -937,9 +937,10 @@ function renderGameFeeFree(){
 }
 function toggleGameFeeFree(){gameFeeFree=!gameFeeFree;renderGameFeeFree();calc()}
 function renderGameResultMode(){
- if(!selected){gameTobi=false;const tb=$("tobiModeBtn"),nb=$("normalModeBtn"),note=$("tobiModeNote"),row=$("scoreChipRow");if(tb)tb.classList.remove("available","active");if(nb)nb.classList.add("active");if(note)note.textContent="";if($("rankField"))$("rankField").style.display="";if(row){row.style.display="grid";row.classList.remove("tobi-box-under","tobi-no-box");if(row.querySelector(".scoreField"))row.querySelector(".scoreField").style.display="";if(row.querySelector(".chipField"))row.querySelector(".chipField").style.display="";}return;}
+ if(!selected){gameTobi=false;const modeRow=$("resultModeRow"),tb=$("tobiModeBtn"),nb=$("normalModeBtn"),note=$("tobiModeNote"),row=$("scoreChipRow");if(modeRow)modeRow.style.display="none";if(tb)tb.classList.remove("available","active");if(nb)nb.classList.add("active");if(note)note.textContent="";if($("rankField"))$("rankField").style.display="";if(row){row.style.display="grid";row.classList.remove("tobi-box-under","tobi-no-box");if(row.querySelector(".scoreField"))row.querySelector(".scoreField").style.display="";if(row.querySelector(".chipField"))row.querySelector(".chipField").style.display="";}return;}
  const allowed=(selected.tobiEnabled==="yes" || (+selected.tobiAmount||0)>0);
- const tb=$("tobiModeBtn"), nb=$("normalModeBtn"), note=$("tobiModeNote");
+ const modeRow=$("resultModeRow"),tb=$("tobiModeBtn"), nb=$("normalModeBtn"), note=$("tobiModeNote");
+ if(modeRow)modeRow.style.display=allowed?"flex":"none";
  if(tb)tb.classList.toggle("available",allowed);
  if(!allowed)gameTobi=false;
  if(nb)nb.classList.toggle("active",!gameTobi);
