@@ -44,7 +44,7 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 .moreBtn{width:100%;margin-top:12px;background:#fff;color:#18794e;border:1px solid #cfd8d3;border-radius:10px;padding:12px;font-weight:800}
 .scoreInput{font-size:18px;line-height:1.2;padding-left:14px;padding-right:50px}
 
-/* v6.7 Heavy / premium mahjong theme */
+/* v7.0 Heavy / premium mahjong theme */
 :root{
   --bg:#07110d;
   --bg2:#0b1a14;
@@ -268,7 +268,7 @@ a{color:var(--gold2)}
 .statsBackTop .back{padding-bottom:0}
 
 
-/* v6.7 form/layout fixes */
+/* v7.0 form/layout fixes */
 .field{min-width:0}
 .grid>*{min-width:0}
 input,select,button{max-width:100%}
@@ -350,7 +350,7 @@ input,select{min-width:0}
 .statsNavTop #nextGameFromStats .primary{margin:0}
 
 
-/* v6.7 iOS overflow hardening */
+/* v7.0 iOS overflow hardening */
 #gameDate,
 #rankMonthInput,
 #rankYearSelect{
@@ -421,7 +421,7 @@ input,select{min-width:0}
 }
 
 
-/* v6.7 chip layout + reactive calculation fixes */
+/* v7.0 chip layout + reactive calculation fixes */
 .scoreChipRow{
   grid-template-columns:minmax(150px,170px) minmax(0,1fr) !important;
   gap:10px !important;
@@ -466,7 +466,7 @@ input,select{min-width:0}
 }
 
 
-/* v6.7 final mobile alignment fix */
+/* v7.0 final mobile alignment fix */
 .scoreChipRow{
   display:grid !important;
   grid-template-columns:145px minmax(0,1fr) !important;
@@ -533,10 +533,43 @@ input,select{min-width:0}
   }
 }
 
+
+
+
+.resultModeRow{display:flex;gap:8px;margin:4px 0 16px}
+.modeBtn{
+  flex:1;min-height:46px;border-radius:11px;
+  border:1px solid rgba(201,165,87,.38);
+  background:#0b1913;color:#ddd2b6;font-weight:800
+}
+.modeBtn.active{
+  background:linear-gradient(180deg,#1d8c5b,#146a44);
+  border-color:#55d89a;color:#fff
+}
+.tobiModeBtn{display:none}
+.tobiModeBtn.available{display:block}
+.tobiModeBtn.active{
+  background:linear-gradient(180deg,#8b3028,#642019);
+  border-color:#df776b;color:#fff
+}
+.tobiModeNote{margin:-6px 0 14px}
+.scoreChipRow.tobi-box-under{
+  grid-template-columns:minmax(135px,165px) !important;
+}
+.scoreChipRow.tobi-box-under .chipField{display:none}
+
+
+.scoreChipRow.tobi-no-box{
+  grid-template-columns:minmax(0,1fr) !important;
+}
+.scoreChipRow.tobi-no-box .chipField{
+  max-width:260px;
+}
+
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v6.7</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.0</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -560,7 +593,10 @@ input,select{min-width:0}
 <div class="field"><label>ゲーム代（円/ゲーム）</label><input id="gameFee" type="number" value="500"></div>
 <div class="field"><label>トップ賞等（円/ゲーム）</label><input id="topFee" type="number" value="0"></div>
 </div>
-<div class="grid"><div class="field"><label>持ち点</label><input id="startPoints" type="number" value="25000"></div><div class="field"><label>返し点</label><input id="returnPoints" type="number" value="30000"></div></div><div class="field"><label>箱下計算</label><select id="belowZero"><option value="yes">有（マイナス点まで計算）</option><option value="no">無（0点未満は入力不可）</option></select></div><div class="field" id="tobiField"><label>トビ賞（金額・円）</label><input id="tobiAmount" type="number" min="0" step="100" value="0" placeholder="例：500"><div class="note" style="margin-top:6px">箱下計算の有無にかかわらず設定できます。トビが発生した対局の収支に反映します。</div></div>
+<div class="grid"><div class="field"><label>持ち点</label><input id="startPoints" type="number" value="25000"></div><div class="field"><label>返し点</label><input id="returnPoints" type="number" value="30000"></div></div>
+<div class="field"><label>箱下計算</label><select id="belowZero"><option value="yes">有（マイナス点まで計算）</option><option value="no">無（0点未満は入力不可）</option></select></div>
+<div class="field"><label>トビ</label><select id="tobiEnabled" onchange="toggleTobiField()"><option value="no">無</option><option value="yes">有</option></select></div>
+<div class="field" id="tobiField" style="display:none"><label>トビ賞（金額・円）</label><input id="tobiAmount" type="number" min="0" step="100" value="0" placeholder="例：500"><div class="note" style="margin-top:6px">「トビ：有」の店舗だけ、対局入力画面で「トビ」を選択できます。</div></div>
 <div class="field"><label>ウマ</label><select id="umaType">
 <option value="1-2">1-2（ワンツー）</option><option value="1-3">1-3（ワンスリー）</option>
 <option value="2-3">2-3（ツースリー）</option><option value="2-4">2-4（ツーフォー）</option>
@@ -579,8 +615,13 @@ input,select{min-width:0}
 <h2 id="inputTitle">対局入力</h2>
 <div class="field"><label>対局日</label><input id="gameDate" type="date" oninput="updateGameNo();calc()" onchange="updateGameNo();calc()"></div>
 <div id="gameNo" class="gameNo"></div>
-<div class="field"><label>着順</label><div id="rankButtons" class="rankButtons"></div><input id="rank" type="hidden" value="1"></div>
-<div class="scoreChipRow">
+<div id="resultModeRow" class="resultModeRow">
+  <button id="normalModeBtn" class="modeBtn active" type="button" onclick="setGameResultMode(false)">通常</button>
+  <button id="tobiModeBtn" class="modeBtn tobiModeBtn" type="button" onclick="setGameResultMode(true)">トビ</button>
+</div>
+<div id="tobiModeNote" class="note tobiModeNote"></div>
+<div id="rankField" class="field"><label>着順</label><div id="rankButtons" class="rankButtons"></div><input id="rank" type="hidden" value="1"></div>
+<div id="scoreChipRow" class="scoreChipRow">
 <div class="field scoreField">
 <label>最終持ち点</label>
 <div class="scoreInputWrap">
@@ -639,7 +680,7 @@ input,select{min-width:0}
 </main>
 <script>
 const $=id=>document.getElementById(id);
-let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="month",historyExpanded=false,statsRankMode="today",gameFeeFree=false,rankDayMode="today",rankMonth="",rankYear="";
+let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="month",historyExpanded=false,statsRankMode="today",gameFeeFree=false,gameTobi=false,rankDayMode="today",rankMonth="",rankYear="";
 const rawStores=localStorage.getItem("fm_stores"), rawRecords=localStorage.getItem("fm_records");
 // 読み込み時は絶対に空データで上書きしない。既存データは退避してから扱う。
 try{stores=JSON.parse(rawStores||"[]");records=JSON.parse(rawRecords||"[]")}catch(e){stores=[];records=[]}
@@ -651,7 +692,7 @@ rankMonth=today.slice(0,7);rankYear=today.slice(0,4);
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma)}));
-/* v6.7: known Cabo settings correction from the user's confirmed rules */
+/* v7.0: known Cabo settings correction from the user's confirmed rules */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
     return {...s,pointRate:100,startPoints:25000,returnPoints:30000,gameFee:600,topFee:(s.topFee==null?0:+s.topFee),umaType:"1-3"};
@@ -704,14 +745,14 @@ function renderStores(){
  box.innerHTML=stores.map((s,i)=>`<div class="storeRow"><button class="store" type="button" onclick="selectStore(${i})">${esc(s.shop)}</button><button class="edit" type="button" onclick="editStore(${i})">編集</button></div>`).join("");
 }
 function openNewStore(){editStoreIndex=-1;$("registerTitle").textContent="店舗を登録";clearForm();toggleTobiField();if($("deleteStoreBtn"))$("deleteStoreBtn").classList.remove("show");show("register")}
-function clearForm(){["shop","memo"].forEach(id=>$(id).value="");$("players").value="4";$("pointRate").value="";$("chipValue").value="500";$("gameFee").value="600";$("topFee").value="0";$("startPoints").value="25000";$("returnPoints").value="30000";$("belowZero").value="no";$("tobiAmount").value="0";$("umaType").value="1-2"}
-function editStore(i){editStoreIndex=i;const s=stores[i];$("registerTitle").textContent="店舗設定を編集";if($("deleteStoreBtn"))$("deleteStoreBtn").classList.add("show");$("shop").value=s.shop;$("players").value=s.players;$("pointRate").value=s.pointRate;$("chipValue").value=s.chipValue;$("gameFee").value=s.gameFee;$("topFee").value=s.topFee;$("startPoints").value=s.startPoints||25000;$("returnPoints").value=s.returnPoints;$("belowZero").value=s.belowZero||"no";$("tobiAmount").value=s.tobiAmount||0;$("umaType").value=s.umaType||"1-2";$("memo").value=s.memo||"";toggleTobiField();show("register")}
-function toggleTobiField(){if($("tobiField"))$("tobiField").style.display="block"}
+function clearForm(){["shop","memo"].forEach(id=>$(id).value="");$("players").value="4";$("pointRate").value="";$("chipValue").value="500";$("gameFee").value="600";$("topFee").value="0";$("startPoints").value="25000";$("returnPoints").value="30000";$("belowZero").value="no";$("tobiEnabled").value="no";$("tobiAmount").value="0";$("umaType").value="1-2"}
+function editStore(i){editStoreIndex=i;const s=stores[i];$("registerTitle").textContent="店舗設定を編集";if($("deleteStoreBtn"))$("deleteStoreBtn").classList.add("show");$("shop").value=s.shop;$("players").value=s.players;$("pointRate").value=s.pointRate;$("chipValue").value=s.chipValue;$("gameFee").value=s.gameFee;$("topFee").value=s.topFee;$("startPoints").value=s.startPoints||25000;$("returnPoints").value=s.returnPoints;$("belowZero").value=s.belowZero||"no";$("tobiEnabled").value=(s.tobiEnabled==="yes"||(+s.tobiAmount||0)>0)?"yes":"no";$("tobiAmount").value=s.tobiAmount||0;$("umaType").value=s.umaType||"1-2";$("memo").value=s.memo||"";toggleTobiField();show("register")}
+function toggleTobiField(){if($("tobiField"))$("tobiField").style.display=$("tobiEnabled")?.value==="yes"?"block":"none"}
 function saveStore(){
  const name=$("shop").value.trim();if(!name){alert("店舗名を入力してください。");return}
  if($("pointRate").value===""){alert("点数レートを入力してください。");return}
  const old=editStoreIndex>=0?stores[editStoreIndex]:null;
- const s={id:old?.id||uid(),shop:name,players:+$("players").value,pointRate:+$("pointRate").value,chipValue:+$("chipValue").value,gameFee:+$("gameFee").value,topFee:+$("topFee").value,startPoints:+$("startPoints").value,returnPoints:+$("returnPoints").value,belowZero:$("belowZero").value,tobiAmount:+$("tobiAmount").value||0,umaType:$("umaType").value,memo:$("memo").value};
+ const s={id:old?.id||uid(),shop:name,players:+$("players").value,pointRate:+$("pointRate").value,chipValue:+$("chipValue").value,gameFee:+$("gameFee").value,topFee:+$("topFee").value,startPoints:+$("startPoints").value,returnPoints:+$("returnPoints").value,belowZero:$("belowZero").value,tobiEnabled:$("tobiEnabled").value,tobiAmount:+$("tobiAmount").value||0,umaType:$("umaType").value,memo:$("memo").value};
  if(editStoreIndex>=0){stores[editStoreIndex]=s;records.forEach(r=>{if(r.storeId===s.id)r.shop=s.shop})}else stores.push(s);
  saveAll();editStoreIndex=-1;alert("店舗を保存しました。");show("home");
 }
@@ -743,10 +784,12 @@ function selectStore(i){
  $("chips").value=0;
  $("rank").value="1";
  gameFeeFree=false;
+ gameTobi=false;
  setupGameScreen();
  updatePointsPreview();
  updateScoreSuffix();
  renderGameFeeFree();
+ renderGameResultMode();
  renderChipDisplay();
  updateRankButtons();
  updateGameNo();
@@ -755,6 +798,7 @@ function selectStore(i){
 }
 function setupGameScreen(){
 $("rankButtons").innerHTML=Array.from({length:selected.players},(_,i)=>`<button type="button" class="rankBtn" data-rank="${i+1}" onclick="setRank(${i+1})">${i+1}着</button>`).join(""); updateRankButtons(); $("points").min=selected.belowZero==="yes"?"":0;
+ renderGameResultMode();
  $("inputTitle").textContent=editRecordIndex>=0?"対局記録を編集":"対局入力";$("recordBtn").textContent=editRecordIndex>=0?"変更を保存":"この結果を記録";$("deleteBtn").style.display=editRecordIndex>=0?"block":"none";
  renderRankQuickStats();renderGameFeeFree();
 }
@@ -858,6 +902,76 @@ function renderGameFeeFree(){
  b.textContent=`ゲーム代無料：${gameFeeFree?"ON":"OFF"}`;
 }
 function toggleGameFeeFree(){gameFeeFree=!gameFeeFree;renderGameFeeFree();calc()}
+function renderGameResultMode(){
+ if(!selected)return;
+ const allowed=(selected.tobiEnabled==="yes" || (+selected.tobiAmount||0)>0);
+ const tb=$("tobiModeBtn"), nb=$("normalModeBtn"), note=$("tobiModeNote");
+ if(tb)tb.classList.toggle("available",allowed);
+ if(!allowed)gameTobi=false;
+ if(nb)nb.classList.toggle("active",!gameTobi);
+ if(tb)tb.classList.toggle("active",gameTobi);
+
+ const rankField=$("rankField"), row=$("scoreChipRow");
+ if(!gameTobi){
+   if(rankField)rankField.style.display="";
+   if(row){row.style.display="grid";row.classList.remove("tobi-box-under","tobi-no-box")}
+   if(row?.querySelector(".scoreField"))row.querySelector(".scoreField").style.display="";
+   if(row?.querySelector(".chipField"))row.querySelector(".chipField").style.display="";
+   if(note)note.textContent="";
+   return;
+ }
+
+ // Tobi automatically means last place and no chip entry.
+ $("rank").value=String(+selected.players||4);
+ renderChipDisplay();
+ updateRankButtons();
+ if(rankField)rankField.style.display="none";
+
+ if(selected.belowZero==="yes"){
+   // Exact negative score is needed only when the shop settles below zero.
+   if(row){
+     row.style.display="grid";
+     row.classList.remove("tobi-no-box");row.classList.add("tobi-box-under");
+     if(row.querySelector(".scoreField"))row.querySelector(".scoreField").style.display="";
+     if(row.querySelector(".chipField"))row.querySelector(".chipField").style.display="";
+   }
+   if(note)note.textContent="箱下計算ありの店舗のため、最終持ち点を入力してください。着順は最下位で自動入力し、チップは通常どおり入力できます。";
+ }else{
+   // No below-zero settlement: 0 points is sufficient and all result fields can be skipped.
+   $("points").value="0";
+   updateScoreSuffix();
+   if(row){
+     row.style.display="grid";
+     row.classList.remove("tobi-box-under");
+     row.classList.add("tobi-no-box");
+     if(row.querySelector(".scoreField"))row.querySelector(".scoreField").style.display="none";
+     if(row.querySelector(".chipField"))row.querySelector(".chipField").style.display="";
+   }
+   if(note)note.textContent="着順と持ち点の入力は不要です。着順は最下位、持ち点は0点で自動入力します。チップは通常どおり入力できます。";
+ }
+}
+function setGameResultMode(isTobi){
+ ensureSelectedStore();
+ if(!selected)return;
+ const allowed=(selected.tobiEnabled==="yes" || (+selected.tobiAmount||0)>0);
+ gameTobi=!!isTobi && allowed;
+
+ if(gameTobi){
+   $("rank").value=String(+selected.players||4);
+   if(selected.belowZero!=="yes")$("points").value="0";
+   else $("points").value="";
+ }else{
+   $("rank").value="1";
+   $("points").value="";
+   $("chips").value="0";
+ }
+ renderGameResultMode();
+ updateScoreSuffix();
+ calc();
+}
+
+
+
 
 function calc(){
  updateScoreSuffix();
@@ -876,7 +990,7 @@ function calc(){
  if(rawPoints===""){
    calcEl.textContent="—";
    calcEl.className="profit";
-   breakdownEl.innerHTML='<span class="note">最終持ち点を入力してください。</span>';
+   breakdownEl.innerHTML=`<span class="note">${gameTobi&&selected?.belowZero==="yes"?"箱下精算用の最終持ち点を入力してください。":"最終持ち点を入力してください。"}</span>`;
    try{renderTodayRankSummary();renderGameTodayRanks()}catch(e){}
    return {total:0,gross:0,emptyPoints:true};
  }
@@ -899,7 +1013,7 @@ function calc(){
  const gross=Math.round(score+oka+uma+chip);
  const fee=gameFeeFree?0:-gameFee;
  const extraFee=r===1?-topFee:0;
- const tobi=((selected.belowZero==="yes"&&p<0)||(selected.belowZero!=="yes"&&p<=0))?-tobiAmount:0;
+ const tobi=gameTobi?-tobiAmount:0;
  const total=Math.round(gross+fee+extraFee+tobi);
 
  calcEl.textContent=fmt(total);
@@ -919,15 +1033,19 @@ $("belowZero").addEventListener("change",toggleTobiField);
 ["gameDate","points"].forEach(id=>$(id).addEventListener("input",()=>{if(id==="gameDate")updateGameNo();if(id==="points")updatePointsPreview();calc()}));
 function recordGame(){
  if(!selected)return;
- if($("points").value===""){alert("最終持ち点を入力してください。");return;}
+ if(gameTobi){
+   $("rank").value=String(+selected.players||4);
+   if(selected.belowZero!=="yes")$("points").value="0";
+   if(selected.belowZero==="yes" && $("points").value===""){alert("箱下精算用の最終持ち点だけ入力してください。");return;}
+ }else if($("points").value===""){alert("最終持ち点を入力してください。");return;}
  if(selected.belowZero!=="yes" && ((+$("points").value||0)*100)<0){alert("この店舗は箱下計算「無」のため、マイナス点は入力できません。");return;}const {total,gross}=calc(),r=+$("rank").value||1,p=(+$("points").value||0)*100,c=+$("chips").value||0,date=$("gameDate").value||today;
- const obj={id:editRecordIndex>=0?records[editRecordIndex].id:uid(),date,shop:selected.shop,storeId:selected.id,total,gross,rank:r,points:p,chips:c,games:1,players:selected.players,gameFeeFree:!!gameFeeFree};
+ const obj={id:editRecordIndex>=0?records[editRecordIndex].id:uid(),date,shop:selected.shop,storeId:selected.id,total,gross,rank:r,points:p,chips:c,games:1,players:selected.players,gameFeeFree:!!gameFeeFree,gameTobi:!!gameTobi};
  if(editRecordIndex>=0)records[editRecordIndex]=obj;else records.push(obj);
  saveAll();const msg=editRecordIndex>=0?"変更を保存しました":"記録しました";editRecordIndex=-1;alert(`${msg}：${fmt(total)}`);showStats(selected.id);
 }
 function editRecord(i){
  const r=records[i],s=storeForRecord(r);if(!s){alert("この記録の店舗設定が見つかりません。");return}
- selected=s;localStorage.setItem("fm_selected_store_id",s.id);editRecordIndex=i;setupGameScreen();$("gameDate").value=r.date;$("rank").value=String(r.rank);updateRankButtons();$("points").value=Math.round((+r.points||0)/100);updatePointsPreview();updateScoreSuffix();$("chips").value=Math.max(-10,Math.min(10,+r.chips||0));gameFeeFree=!!r.gameFeeFree;renderGameFeeFree();renderChipDisplay();updateGameNo();show("game");calc();
+ selected=s;localStorage.setItem("fm_selected_store_id",s.id);editRecordIndex=i;gameTobi=!!r.gameTobi;setupGameScreen();$("gameDate").value=r.date;$("rank").value=String(r.rank);updateRankButtons();$("points").value=Math.round((+r.points||0)/100);updatePointsPreview();updateScoreSuffix();$("chips").value=Math.max(-10,Math.min(10,+r.chips||0));gameFeeFree=!!r.gameFeeFree;renderGameFeeFree();renderGameResultMode();renderChipDisplay();updateGameNo();show("game");calc();
 }
 function deleteRecord(){if(editRecordIndex<0)return;if(!confirm("この対局記録を削除しますか？"))return;records.splice(editRecordIndex,1);saveAll();editRecordIndex=-1;showStats(selected?.id||"all")}
 function cancelGameEdit(){editRecordIndex=-1;show("home")}
@@ -1058,7 +1176,7 @@ function renderHistory(rr){
  const allowed=new Set(rr.map(r=>r.id));
  const all=records.map((r,i)=>({r,i})).filter(o=>allowed.has(o.r.id)).reverse();
  const items=historyExpanded?all:all.slice(0,4);
- const rows=items.map(({r,i})=>`<div class="swipeWrap"><button class="swipeDelete" type="button" onclick="deleteHistoryRecord(${i},event)">削除</button><div class="swipeRow" ontouchstart="swipeStart(event,this)" ontouchend="swipeEnd(event,this)" onclick="if(!this.classList.contains('open'))editRecord(${i})"><div class="month"><span>${r.date}・${gameNumber(r,i)}ゲーム目<br><small>${esc(r.shop)} / ${r.rank}着 / ${(+r.points||0).toLocaleString()}点 / チップ${r.chips||0}枚${r.gameFeeFree?" / ゲーム代無料":""}</small></span><b class="${(+r.total||0)>=0?'pos':'neg'}">${fmt(+r.total||0)}<small style="display:block;font-weight:400;color:#555">抜き ${fmt(recGross(r))}</small></b></div></div></div>`).join("");
+ const rows=items.map(({r,i})=>`<div class="swipeWrap"><button class="swipeDelete" type="button" onclick="deleteHistoryRecord(${i},event)">削除</button><div class="swipeRow" ontouchstart="swipeStart(event,this)" ontouchend="swipeEnd(event,this)" onclick="if(!this.classList.contains('open'))editRecord(${i})"><div class="month"><span>${r.date}・${gameNumber(r,i)}ゲーム目<br><small>${esc(r.shop)} / ${r.rank}着 / ${(+r.points||0).toLocaleString()}点 / チップ${r.chips||0}枚${r.gameFeeFree?" / ゲーム代無料":""}${r.gameTobi?" / トビ":""}</small></span><b class="${(+r.total||0)>=0?'pos':'neg'}">${fmt(+r.total||0)}<small style="display:block;font-weight:400;color:#555">抜き ${fmt(recGross(r))}</small></b></div></div></div>`).join("");
  let fold="";
  if(all.length>4){
    fold=`<button class="foldBtn" type="button" onclick="toggleHistory()">${historyExpanded?"過去の対局を閉じる":`さらに表示（残り${all.length-4}件）`}</button>`;
