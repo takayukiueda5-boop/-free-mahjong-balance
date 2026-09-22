@@ -236,6 +236,12 @@ a{color:var(--gold2)}
   color:#f2ead7;
 }
 .dayRankCell b{display:block;font-size:20px;margin-top:2px}
+
+.dayEditToggle{width:100%;margin-top:12px;border:1px solid rgba(201,165,87,.36);background:#0a1712;color:#ead7a5;border-radius:10px;padding:11px 12px;font-weight:800}
+.dayEditList{margin-top:10px;border-top:1px solid rgba(201,165,87,.20);padding-top:6px}
+.dayEditItem{width:100%;border:0;background:transparent;color:#f2ead7;text-align:left;padding:10px 2px;border-bottom:1px solid rgba(201,165,87,.14)}
+.dayEditItem:last-child{border-bottom:0}
+.dayEditItem small{display:block;color:#aab2ab;margin-top:3px}
 .swipeRow{background:var(--panel)!important}
 .swipeDelete{z-index:0}
 .swipeRow{z-index:1}
@@ -577,7 +583,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.2</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.3</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -867,13 +873,19 @@ function renderGameTodayRanks(){
 
 
 let rankSummaryMode="today";
-function setRankSummaryMode(mode){rankSummaryMode=mode;renderTodayRankSummary()}
+let summaryEditStoreKey="";
+function setRankSummaryMode(mode){rankSummaryMode=mode;summaryEditStoreKey="";renderTodayRankSummary()}
+function toggleSummaryEdit(storeKey){
+ summaryEditStoreKey=summaryEditStoreKey===storeKey?"":storeKey;
+ renderTodayRankSummary();
+}
 function dateShift(ymd,days){const d=new Date(ymd+"T12:00:00");d.setDate(d.getDate()+days);return d.toISOString().slice(0,10)}
 function renderTodayRankSummary(){
  const box=$("todayRankSummary"); if(!box)return;
  const d=$("gameDate")?.value||today, prev=dateShift(d,-1);
  const dates=rankSummaryMode==="carry"?[prev,d]:[d];
- const rr=records.filter(r=>dates.includes(r.date));
+ const indexed=records.map((r,i)=>({r,i})).filter(o=>dates.includes(o.r.date));
+ const rr=indexed.map(o=>o.r);
  const dayLabel=d===today?"今日":"この日";
  const tab1=rankSummaryMode==="today"?"active":"", tab2=rankSummaryMode==="carry"?"active":"";
 
@@ -887,18 +899,20 @@ function renderTodayRankSummary(){
  }
 
  const groups={};
- rr.forEach(r=>{
+ indexed.forEach(({r,i})=>{
    const key=r.storeId||r.shop||"unknown";
-   if(!groups[key]) groups[key]={name:r.shop||"店舗",records:[]};
-   groups[key].records.push(r);
+   if(!groups[key]) groups[key]={key,name:r.shop||"店舗",records:[]};
+   groups[key].records.push({r,i});
  });
 
  const cards=Object.values(groups).map(g=>{
-   const st=stores.find(s=>s.id===g.records[0].storeId)||stores.find(s=>s.shop===g.name);
+   const st=stores.find(s=>s.id===g.records[0].r.storeId)||stores.find(s=>s.shop===g.name);
    const n=(+st?.players===3)?3:4;
-   const counts=Array.from({length:n},(_,i)=>g.records.filter(r=>+r.rank===i+1).length);
-   const net=g.records.reduce((a,r)=>a+(+r.total||0),0);
-   const gross=g.records.reduce((a,r)=>a+recGross(r),0);
+   const counts=Array.from({length:n},(_,i)=>g.records.filter(o=>+o.r.rank===i+1).length);
+   const net=g.records.reduce((a,o)=>a+(+o.r.total||0),0);
+   const gross=g.records.reduce((a,o)=>a+recGross(o.r),0);
+   const open=summaryEditStoreKey===g.key;
+   const editRows=open?`<div class="dayEditList">${g.records.slice().reverse().map(({r,i})=>`<button type="button" class="dayEditItem" onclick="editRecord(${i})"><b>${r.date}・${gameNumber(r,i)}ゲーム目　${r.rank}着</b><small>${(+r.points||0).toLocaleString()}点 / チップ${r.chips||0}枚 / 実収支 ${fmt(+r.total||0)}${r.gameTobi?" / トビ":""}</small></button>`).join("")}</div>`:"";
    return `<div class="dayStoreCard">
      <div class="dayStoreName">${esc(g.name)}</div>
      <div class="dayRankGrid" style="grid-template-columns:repeat(${n},1fr)">
@@ -908,6 +922,8 @@ function renderTodayRankSummary(){
        <div>実収支<b class="${net>=0?'pos':'neg'}">${fmt(net)}</b></div>
        <div>ゲーム代抜き<b class="${gross>=0?'pos':'neg'}">${fmt(gross)}</b></div>
      </div>
+     <button type="button" class="dayEditToggle" onclick="toggleSummaryEdit('${g.key.replace(/'/g,"\\'")}')">${open?"編集一覧を閉じる":"対局結果を編集"}</button>
+     ${editRows}
    </div>`;
  }).join("");
 
