@@ -493,6 +493,10 @@ input,select{min-width:0}
   grid-template-columns:minmax(0,1fr) 52px !important;
   box-sizing:border-box !important;
 }
+/* v7.4: suffix is a separate grid cell, so don't reserve extra space inside the input */
+.scoreInput{
+  padding-right:12px !important;
+}
 .chipField .chipStepper{
   display:grid !important;
   grid-template-columns:40px minmax(54px,1fr) 40px !important;
@@ -583,7 +587,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.3</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.4</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -656,9 +660,9 @@ input,select{min-width:0}
 <input id="chips" type="hidden" value="0">
 </div>
 </div>
+<button class="primary" style="margin:2px 0 14px" type="button" onclick="recordGame()" id="recordBtn">この結果を記録</button>
 <div id="feeFreeRow" class="feeFreeRow"><button id="feeFreeBtn" class="feeFreeBtn" type="button" onclick="toggleGameFeeFree()">ゲーム代無料：OFF</button></div>
 <div class="result"><div class="note">今回の実収支（ゲーム代込み）</div><div class="profit" id="calc">0円</div><div id="breakdown"></div></div>
-<button class="primary" style="margin-top:12px" type="button" onclick="recordGame()" id="recordBtn">この結果を記録</button>
 <button class="danger" type="button" id="deleteBtn" style="display:none" onclick="deleteRecord()">この対局記録を削除</button>
 </div>
 </section>
