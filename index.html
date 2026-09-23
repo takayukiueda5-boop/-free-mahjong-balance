@@ -619,7 +619,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.16</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.17</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -631,6 +631,14 @@ input,select{min-width:0}
 <div id="homeToday" style="margin:16px 0 4px"></div>
 </div>
 <div class="card"><button class="primary" type="button" onclick="showStats()">成績を見る</button></div>
+<div class="card">
+<h2>データ管理</h2>
+<div class="note" style="margin-bottom:12px">店舗設定・対局履歴などのアプリデータを1つのバックアップファイルに保存できます。機種変更時は、旧端末でバックアップを作成し、新端末で復元してください。</div>
+<button class="store" type="button" onclick="exportBackup()">バックアップを作成・共有</button>
+<button class="store" type="button" onclick="chooseBackupFile()">バックアップから復元</button>
+<input id="backupFileInput" type="file" accept="application/json,.json" style="display:none" onchange="importBackupFile(event)">
+<div id="backupStatus" class="note" style="margin-top:10px"></div>
+</div>
 </section>
 
 <section id="register" class="screen">
@@ -751,6 +759,8 @@ input,select{min-width:0}
 </main>
 <script>
 const $=id=>document.getElementById(id);
+const APP_VERSION="7.17";
+const BACKUP_SCHEMA_VERSION=1;
 let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="month",historyExpanded=false,statsRankMode="today",statsMetricTab="today",gameFeeFree=false,gameTobi=false,pendingStoreMode=false,rankDayMode="today",rankMonth="",rankYear="";
 const rawStores=localStorage.getItem("fm_stores"), rawRecords=localStorage.getItem("fm_records");
 // 読み込み時は絶対に空データで上書きしない。既存データは退避してから扱う。
@@ -786,6 +796,93 @@ function saveAll(){
  if(oldS&&oldS!=="[]")localStorage.setItem("fm_stores_backup",oldS);
  if(oldR&&oldR!=="[]")localStorage.setItem("fm_records_backup",oldR);
  localStorage.setItem("fm_stores",JSON.stringify(stores));localStorage.setItem("fm_records",JSON.stringify(records));
+}
+function collectAppStorage(){
+ const data={};
+ for(let i=0;i<localStorage.length;i++){
+   const key=localStorage.key(i);
+   if(key&&key.startsWith("fm_")&&!key.endsWith("_backup")) data[key]=localStorage.getItem(key);
+ }
+ return data;
+}
+function makeBackupPayload(){
+ return {
+   app:"free-mahjong-balance",
+   appVersion:APP_VERSION,
+   schemaVersion:BACKUP_SCHEMA_VERSION,
+   exportedAt:new Date().toISOString(),
+   summary:{stores:stores.length,records:records.length},
+   data:{stores,records,selectedStoreId:localStorage.getItem("fm_selected_store_id")||""},
+   storage:collectAppStorage()
+ };
+}
+async function exportBackup(){
+ try{
+   saveAll();
+   const payload=makeBackupPayload();
+   const json=JSON.stringify(payload,null,2);
+   const stamp=localToday().replaceAll("-","");
+   const filename=`free-mahjong-backup_${stamp}.json`;
+   const file=new File([json],filename,{type:"application/json"});
+   if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+     try{
+       await navigator.share({title:"フリー麻雀収支 バックアップ",text:"機種変更・復元用のバックアップファイルです。",files:[file]});
+       if($("backupStatus")) $("backupStatus").textContent=`バックアップを作成しました（店舗 ${stores.length}件・対局 ${records.length}件）。`;
+       return;
+     }catch(e){
+       if(e&&e.name==="AbortError") return;
+     }
+   }
+   const blob=new Blob([json],{type:"application/json"});
+   const url=URL.createObjectURL(blob);
+   const a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),1000);
+   if($("backupStatus")) $("backupStatus").textContent=`バックアップを保存しました（店舗 ${stores.length}件・対局 ${records.length}件）。`;
+ }catch(e){
+   console.error(e);alert("バックアップの作成に失敗しました。もう一度お試しください。");
+ }
+}
+function chooseBackupFile(){
+ const input=$("backupFileInput");if(input){input.value="";input.click()}
+}
+function validateBackupPayload(obj){
+ if(!obj||typeof obj!=="object") throw new Error("invalid payload");
+ const d=obj.data&&typeof obj.data==="object"?obj.data:obj;
+ const restoredStores=Array.isArray(d.stores)?d.stores:null;
+ const restoredRecords=Array.isArray(d.records)?d.records:null;
+ if(!restoredStores||!restoredRecords) throw new Error("missing stores/records");
+ return {restoredStores,restoredRecords,selectedStoreId:d.selectedStoreId||"",storage:obj.storage&&typeof obj.storage==="object"?obj.storage:null};
+}
+async function importBackupFile(event){
+ const file=event.target.files&&event.target.files[0];if(!file)return;
+ try{
+   const text=await file.text();
+   const parsed=JSON.parse(text);
+   const {restoredStores,restoredRecords,selectedStoreId,storage}=validateBackupPayload(parsed);
+   const ok=confirm(`バックアップを復元しますか？\n\n店舗：${restoredStores.length}件\n対局：${restoredRecords.length}件\n\n現在のデータは安全のため端末内バックアップに退避してから置き換えます。`);
+   if(!ok)return;
+   const oldS=localStorage.getItem("fm_stores"),oldR=localStorage.getItem("fm_records");
+   if(oldS&&oldS!=="[]") localStorage.setItem("fm_stores_backup",oldS);
+   if(oldR&&oldR!=="[]") localStorage.setItem("fm_records_backup",oldR);
+   if(storage){
+     Object.entries(storage).forEach(([key,value])=>{
+       if(key.startsWith("fm_")&&!key.endsWith("_backup")&&typeof value==="string") localStorage.setItem(key,value);
+     });
+   }
+   stores=restoredStores;records=restoredRecords;
+   localStorage.setItem("fm_stores",JSON.stringify(stores));
+   localStorage.setItem("fm_records",JSON.stringify(records));
+   const sid=selectedStoreId || (storage&&storage.fm_selected_store_id) || "";
+   if(sid&&stores.some(s=>s.id===sid)) localStorage.setItem("fm_selected_store_id",sid); else localStorage.removeItem("fm_selected_store_id");
+   selected=null;editStoreIndex=-1;editRecordIndex=-1;pendingStoreMode=false;
+   renderStores();
+   if($("backupStatus")) $("backupStatus").textContent=`復元完了：店舗 ${stores.length}件・対局 ${records.length}件。`;
+   alert("データを復元しました。");
+ }catch(e){
+   console.error(e);alert("このファイルはバックアップとして読み込めません。正しいJSONバックアップファイルを選択してください。");
+ }finally{
+   event.target.value="";
+ }
 }
 function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));$(id).classList.add("active");if(id==="home")renderStores();window.scrollTo(0,0)}
 function toggleHelp(id){const el=$(id);if(el)el.classList.toggle("show")}
