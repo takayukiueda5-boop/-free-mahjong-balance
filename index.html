@@ -343,6 +343,16 @@ input,select{min-width:0}
 }
 
 
+.statsMetricTabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:4px 0 12px}
+.statsMetricTabs .pill{min-width:0;padding:10px 4px}
+.statsMetricPanel{display:none}
+.statsMetricPanel.active{display:block}
+.statsMetricPanel .statgrid{margin-top:0}
+.statsMetricPanel .stat{min-height:86px;display:flex;flex-direction:column;justify-content:center}
+.statsMetricPanel .stat b.neg{color:var(--red)}
+.statsMetricPanel .stat b.pos{color:var(--mint)}
+@media(max-width:390px){.statsMetricTabs{gap:5px}.statsMetricTabs .pill{font-size:13px;padding:10px 2px}}
+
 .statsNavTop{margin:2px 4px 14px}
 .statsNavTop .back{
   display:block;
@@ -606,7 +616,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.13</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.14</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -712,13 +722,21 @@ input,select{min-width:0}
 <div class="card"><h2>最近の対局</h2><div class="note" style="margin-bottom:8px">タップすると内容を編集できます。</div><div id="history"></div></div>
 <div class="card"><h2>成績</h2>
 <div class="toolbar"><select id="statsStore" onchange="renderStats()"></select></div>
-<div class="statgrid">
-<div class="stat">今日・実収支<b id="todayTotal">0円</b></div><div class="stat">今月・実収支<b id="monthTotal">0円</b></div>
-<div class="stat">今年・実収支<b id="yearTotal">0円</b></div><div class="stat">累計・実収支<b id="allTotal">0円</b></div>
-<div class="stat">累計・ゲーム代抜き<b id="grossTotal">0円</b></div><div class="stat">累計・支払ゲーム代<b id="gameFeeTotal">0円</b></div>
-<div class="stat">平均着順<b id="avgRank">-</b></div><div class="stat">対局数<b id="gameCount">0</b></div>
-<div class="stat">平均実収支<b id="avg">0円</b></div>
+<div class="pillrow statsMetricTabs">
+<button id="statsMetricToday" class="pill active" type="button" onclick="setStatsMetricTab('today')">今日</button>
+<button id="statsMetricMonth" class="pill" type="button" onclick="setStatsMetricTab('month')">今月</button>
+<button id="statsMetricYear" class="pill" type="button" onclick="setStatsMetricTab('year')">今年</button>
+<button id="statsMetricAll" class="pill" type="button" onclick="setStatsMetricTab('all')">累計</button>
+</div>
+<div id="statsPanelToday" class="statsMetricPanel active"><div class="statgrid"><div class="stat">実収支<b id="todayTotal">0円</b></div></div></div>
+<div id="statsPanelMonth" class="statsMetricPanel"><div class="statgrid"><div class="stat">実収支<b id="monthTotal">0円</b></div></div></div>
+<div id="statsPanelYear" class="statsMetricPanel"><div class="statgrid"><div class="stat">実収支<b id="yearTotal">0円</b></div></div></div>
+<div id="statsPanelAll" class="statsMetricPanel"><div class="statgrid">
+<div class="stat">累計・実収支<b id="allTotal">0円</b></div><div class="stat">累計・ゲーム代抜き<b id="grossTotal">0円</b></div>
+<div class="stat">累計・支払ゲーム代<b id="gameFeeTotal">0円</b></div><div class="stat">平均着順<b id="avgRank">-</b></div>
+<div class="stat">累計対局数<b id="gameCount">0</b></div>
 </div></div>
+</div>
 
 <div class="card"><h2>店舗別収支</h2><div id="storeBreakdown"></div></div>
 
@@ -733,7 +751,7 @@ input,select{min-width:0}
 </main>
 <script>
 const $=id=>document.getElementById(id);
-let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="month",historyExpanded=false,statsRankMode="today",gameFeeFree=false,gameTobi=false,pendingStoreMode=false,rankDayMode="today",rankMonth="",rankYear="";
+let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="month",historyExpanded=false,statsRankMode="today",statsMetricTab="today",gameFeeFree=false,gameTobi=false,pendingStoreMode=false,rankDayMode="today",rankMonth="",rankYear="";
 const rawStores=localStorage.getItem("fm_stores"), rawRecords=localStorage.getItem("fm_records");
 // 読み込み時は絶対に空データで上書きしない。既存データは退避してから扱う。
 try{stores=JSON.parse(rawStores||"[]");records=JSON.parse(rawRecords||"[]")}catch(e){stores=[];records=[]}
@@ -1277,10 +1295,34 @@ function totalPaidGameFees(rr){
    return sum + (st && !r.gameFeeFree ? (+st.gameFee||0)*(+r.games||1) : 0);
  },0);
 }
+function setStatsMetricTab(tab){
+ statsMetricTab=tab;
+ ["today","month","year","all"].forEach(k=>{
+   const btn=$("statsMetric"+k.charAt(0).toUpperCase()+k.slice(1));
+   const panel=$("statsPanel"+k.charAt(0).toUpperCase()+k.slice(1));
+   if(btn)btn.classList.toggle("active",k===tab);
+   if(panel)panel.classList.toggle("active",k===tab);
+ });
+}
+function setMoneyStat(id,value){
+ const el=$(id);if(!el)return;
+ el.textContent=fmt(value);
+ el.classList.remove("pos","neg");
+ if(value<0)el.classList.add("neg");
+ else if(value>0)el.classList.add("pos");
+}
 function renderStats(){
  const rr=filteredRecords(),y=today.slice(0,4),m=today.slice(0,7),by=fn=>rr.filter(fn);
  const day=by(r=>r.date===today),mon=by(r=>r.date.slice(0,7)===m),yr=by(r=>r.date.slice(0,4)===y),all=sumOf(rr);
- $("todayTotal").textContent=fmt(sumOf(day));$("monthTotal").textContent=fmt(sumOf(mon));$("yearTotal").textContent=fmt(sumOf(yr));$("allTotal").textContent=fmt(all);$("grossTotal").textContent=fmt(sumOf(rr,"gross"));$("gameFeeTotal").textContent=(-totalPaidGameFees(rr)).toLocaleString()+"円";$("gameCount").textContent=rr.length;$("avg").textContent=fmt(rr.length?all/rr.length:0);$("avgRank").textContent=rr.length?(rr.reduce((a,r)=>a+(+r.rank||0),0)/rr.length).toFixed(2)+"着":"-";
+ setMoneyStat("todayTotal",sumOf(day));
+ setMoneyStat("monthTotal",sumOf(mon));
+ setMoneyStat("yearTotal",sumOf(yr));
+ setMoneyStat("allTotal",all);
+ setMoneyStat("grossTotal",sumOf(rr,"gross"));
+ setMoneyStat("gameFeeTotal",-totalPaidGameFees(rr));
+ $("gameCount").textContent=rr.length;
+ $("avgRank").textContent=rr.length?(rr.reduce((a,r)=>a+(+r.rank||0),0)/rr.length).toFixed(2)+"着":"-";
+ setStatsMetricTab(statsMetricTab);
  renderStatsTopRanks();renderStoreBreakdown();renderRankStats();renderMonthly(rr);renderHistory(rr);
 }
 function renderStoreBreakdown(){
