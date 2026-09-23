@@ -619,7 +619,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.15</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.16</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -746,9 +746,6 @@ input,select{min-width:0}
 </div>
 </div>
 
-<div class="card"><h2>店舗別収支</h2><div id="storeBreakdown"></div></div>
-
-<div class="card"><h2>月別収支（棒グラフ）</h2><div id="monthlyChart" class="chart"></div><div id="monthly"></div></div>
 
 </section>
 </main>
@@ -1327,7 +1324,7 @@ function renderStats(){
  $("gameCount").textContent=rr.length;
  $("avgRank").textContent=rr.length?(rr.reduce((a,r)=>a+(+r.rank||0),0)/rr.length).toFixed(2)+"着":"-";
  setStatsMetricTab(statsMetricTab);
- renderStatsTopRanks();renderStoreBreakdown();renderIntegratedRankStats();renderMonthly(rr);renderHistory(rr);
+ renderStatsTopRanks();renderIntegratedRankStats();renderHistory(rr);
 }
 function statsMetricRecords(){
  const rr=filteredRecords(),y=today.slice(0,4),m=today.slice(0,7);
