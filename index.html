@@ -616,10 +616,14 @@ input,select{min-width:0}
   #game .scoreInputWrap{grid-template-columns:minmax(0,1fr) 44px !important;}
   #game .scoreSuffix{width:44px !important;min-width:44px !important;}
 }
+
+.dateGameRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end}.dateGameRow .field{margin-bottom:0}.gameNo.inline{margin:0 0 12px;white-space:nowrap;padding-bottom:12px}.rankAverageNote{margin-top:10px;text-align:center;font-size:15px}.rankAverageNote b{font-weight:900}
+@media(max-width:560px){.dateGameRow{grid-template-columns:1fr}.gameNo.inline{padding-bottom:0;margin:-4px 0 12px}}
+
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.17</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.18</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -682,13 +686,14 @@ input,select{min-width:0}
 <section id="game" class="screen">
 <div class="card">
 <button class="back" type="button" onclick="cancelGameEdit()">← 店舗選択へ戻る</button>
-<div id="gameContext" class="gameContext"></div>
+<h2 id="inputTitle">対局入力</h2>
 <div id="todayRankSummary" style="margin-bottom:20px"></div>
 <div id="rankQuickStats" class="summary" style="margin-bottom:24px"></div>
-<h2 id="inputTitle">対局入力</h2>
 <div id="recordStoreField" class="field" style="display:none"><label>店舗</label><select id="recordStoreSelect" onchange="changeRecordStore(this.value)"></select><div class="note" style="margin-top:6px">店舗は後からでも変更できます。店舗未設定の間、収支は計算されません。</div></div>
-<div class="field"><label>対局日</label><input id="gameDate" type="date" oninput="updateGameNo();calc()" onchange="updateGameNo();calc()"></div>
-<div id="gameNo" class="gameNo"></div>
+<div class="dateGameRow">
+  <div class="field"><label>対局日</label><input id="gameDate" type="date" oninput="updateGameNo();calc()" onchange="updateGameNo();calc()"></div>
+  <div id="gameNo" class="gameNo inline"></div>
+</div>
 <div id="resultModeRow" class="resultModeRow">
   <button id="normalModeBtn" class="modeBtn active" type="button" onclick="setGameResultMode(false)">通常</button>
   <button id="tobiModeBtn" class="modeBtn tobiModeBtn" type="button" onclick="setGameResultMode(true)">トビ</button>
@@ -744,13 +749,12 @@ input,select{min-width:0}
 <div id="statsPanelYear" class="statsMetricPanel"><div class="statgrid"><div class="stat">実収支<b id="yearTotal">0円</b></div></div></div>
 <div id="statsPanelAll" class="statsMetricPanel"><div class="statgrid">
 <div class="stat">累計・実収支<b id="allTotal">0円</b></div><div class="stat">累計・ゲーム代抜き<b id="grossTotal">0円</b></div>
-<div class="stat">累計・支払ゲーム代<b id="gameFeeTotal">0円</b></div><div class="stat">平均着順<b id="avgRank">-</b></div>
-<div class="stat">累計対局数<b id="gameCount">0</b></div>
+<div class="stat">累計・支払ゲーム代<b id="gameFeeTotal">0円</b></div>
 </div></div>
 <div class="integratedRankBlock">
   <h3>着順成績</h3>
-  <div id="integratedRankSummary"></div>
   <div id="integratedRankChart" class="chart"></div>
+  <div id="integratedRankSummary"></div>
 </div>
 </div>
 
@@ -759,7 +763,7 @@ input,select{min-width:0}
 </main>
 <script>
 const $=id=>document.getElementById(id);
-const APP_VERSION="7.17";
+const APP_VERSION="7.18";
 const BACKUP_SCHEMA_VERSION=1;
 let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="month",historyExpanded=false,statsRankMode="today",statsMetricTab="today",gameFeeFree=false,gameTobi=false,pendingStoreMode=false,rankDayMode="today",rankMonth="",rankYear="";
 const rawStores=localStorage.getItem("fm_stores"), rawRecords=localStorage.getItem("fm_records");
@@ -1028,17 +1032,7 @@ function changeRecordStore(storeId){
  if(selected)localStorage.setItem("fm_selected_store_id",selected.id);else localStorage.removeItem("fm_selected_store_id");
  setupGameScreen();$("rank").value=String(Math.min(rank,selected?.players||4));updateRankButtons();updateGameNo();calc();
 }
-function renderGameContext(){
- const el=$("gameContext");
- if(!el)return;
- if(!selected){
-   el.innerHTML=`<div class="gameContextLabel">現在の入力先</div><div class="gameContextMain">店舗未設定の対局を入力中</div><div class="gameContextSub"><span class="gameContextPill">店舗：未設定</span><span class="gameContextPill modeYonma">麻雀種別：未設定</span></div><div class="note" style="margin-top:8px">店舗を選ぶと、三麻 / 四麻がここに分かりやすく表示されます。</div>`;
-   return;
- }
- const mode=+selected.players===3?"三麻":"四麻";
- const modeClass=+selected.players===3?"modeSanma":"modeYonma";
- el.innerHTML=`<div class="gameContextLabel">現在の入力先</div><div class="gameContextMain">${esc(selected.shop)}</div><div class="gameContextSub"><span class="gameContextPill ${modeClass}">麻雀種別：${mode}</span><span class="gameContextPill">店舗：${esc(selected.shop)}</span></div>`;
-}
+function renderGameContext(){}
 function setupGameScreen(){
 const playerCount=selected?.players||4;
 $("rankButtons").innerHTML=Array.from({length:playerCount},(_,i)=>`<button type="button" class="rankBtn" data-rank="${i+1}" onclick="setRank(${i+1})">${i+1}着</button>`).join(""); updateRankButtons(); $("points").min=selected?.belowZero==="yes"?"":0;
@@ -1057,7 +1051,7 @@ function setRank(r){
  calc();
 }
 function updateRankButtons(){document.querySelectorAll(".rankBtn").forEach(b=>b.classList.toggle("active",b.dataset.rank===$("rank").value))}
-function updateGameNo(){if(!selected){$("gameNo").textContent="店舗未設定の対局";return}$("gameNo").textContent=`この日は ${nextGameNumber($("gameDate").value||today,selected.id,editRecordIndex)}ゲーム目`}
+function updateGameNo(){if(!selected){$("gameNo").textContent="店舗未設定";return}$("gameNo").textContent=`${nextGameNumber($("gameDate").value||today,selected.id,editRecordIndex)}ゲーム目`}
 function renderChipDisplay(){const v=Math.max(-30,Math.min(30,+$("chips").value||0));$("chips").value=v;if($("chipDisplay"))$("chipDisplay").textContent=(v>0?"+":"")+v+"枚";}
 function changeChips(d){
  ensureSelectedStore();
@@ -1418,8 +1412,6 @@ function renderStats(){
  setMoneyStat("allTotal",all);
  setMoneyStat("grossTotal",sumOf(rr,"gross"));
  setMoneyStat("gameFeeTotal",-totalPaidGameFees(rr));
- $("gameCount").textContent=rr.length;
- $("avgRank").textContent=rr.length?(rr.reduce((a,r)=>a+(+r.rank||0),0)/rr.length).toFixed(2)+"着":"-";
  setStatsMetricTab(statsMetricTab);
  renderStatsTopRanks();renderIntegratedRankStats();renderHistory(rr);
 }
@@ -1444,8 +1436,8 @@ function renderIntegratedRankStats(){
  const counts=Array.from({length:maxPlayers},(_,i)=>rr.filter(r=>+r.rank===i+1).length);
  const max=Math.max(1,...counts);
  const avg=rr.length?rr.reduce((a,r)=>a+(+r.rank||0),0)/rr.length:0;
- summary.innerHTML=`<div class="rankgrid">${counts.map((n,i)=>`<div class="rankbox">${i+1}着<b>${n}回</b></div>`).join("")}</div><div class="note" style="margin-top:10px">平均着順：<b>${rr.length?avg.toFixed(2)+"着":"-"}</b> ／ ${rr.length}ゲーム</div>`;
  chart.innerHTML=counts.map((n,i)=>`<div class="barwrap"><div class="barvalue">${n}回</div><div class="bar" style="height:${Math.max(2,n/max*120)}px"></div><div class="barlabel">${i+1}着</div></div>`).join("");
+ summary.innerHTML=`<div class="note rankAverageNote">平均着順：<b>${rr.length?avg.toFixed(2)+"着":"-"}</b> ／ ${rr.length}ゲーム</div>`;
 }
 function renderStoreBreakdown(){
  const scope=$("statsStore").value,ss=scope==="all"?stores:stores.filter(s=>s.id===scope);
