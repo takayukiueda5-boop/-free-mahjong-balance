@@ -351,6 +351,9 @@ input,select{min-width:0}
 .statsMetricPanel .stat{min-height:86px;display:flex;flex-direction:column;justify-content:center}
 .statsMetricPanel .stat b.neg{color:var(--red)}
 .statsMetricPanel .stat b.pos{color:var(--mint)}
+.integratedRankBlock{margin-top:18px;padding-top:16px;border-top:1px solid rgba(201,165,87,.22)}
+.integratedRankBlock h3{margin:0 0 12px;color:var(--gold2);font-size:17px}
+.integratedRankBlock .chart{margin-top:12px}
 @media(max-width:390px){.statsMetricTabs{gap:5px}.statsMetricTabs .pill{font-size:13px;padding:10px 2px}}
 
 .statsNavTop{margin:2px 4px 14px}
@@ -616,7 +619,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.14</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.15</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -736,14 +739,14 @@ input,select{min-width:0}
 <div class="stat">累計・支払ゲーム代<b id="gameFeeTotal">0円</b></div><div class="stat">平均着順<b id="avgRank">-</b></div>
 <div class="stat">累計対局数<b id="gameCount">0</b></div>
 </div></div>
+<div class="integratedRankBlock">
+  <h3>着順成績</h3>
+  <div id="integratedRankSummary"></div>
+  <div id="integratedRankChart" class="chart"></div>
+</div>
 </div>
 
 <div class="card"><h2>店舗別収支</h2><div id="storeBreakdown"></div></div>
-
-<div class="card"><h2>通算着順成績</h2>
-<div class="pillrow"><button class="pill active" data-period="month" onclick="setRankPeriod('month')">今月</button><button class="pill" data-period="year" onclick="setRankPeriod('year')">今年</button></div>
-<div id="rankPeriodControls" class="rankPeriodControls"></div>
-<div id="rankSummary"></div><div id="rankChart" class="chart"></div></div>
 
 <div class="card"><h2>月別収支（棒グラフ）</h2><div id="monthlyChart" class="chart"></div><div id="monthly"></div></div>
 
@@ -1303,6 +1306,7 @@ function setStatsMetricTab(tab){
    if(btn)btn.classList.toggle("active",k===tab);
    if(panel)panel.classList.toggle("active",k===tab);
  });
+ renderIntegratedRankStats();
 }
 function setMoneyStat(id,value){
  const el=$(id);if(!el)return;
@@ -1323,7 +1327,31 @@ function renderStats(){
  $("gameCount").textContent=rr.length;
  $("avgRank").textContent=rr.length?(rr.reduce((a,r)=>a+(+r.rank||0),0)/rr.length).toFixed(2)+"着":"-";
  setStatsMetricTab(statsMetricTab);
- renderStatsTopRanks();renderStoreBreakdown();renderRankStats();renderMonthly(rr);renderHistory(rr);
+ renderStatsTopRanks();renderStoreBreakdown();renderIntegratedRankStats();renderMonthly(rr);renderHistory(rr);
+}
+function statsMetricRecords(){
+ const rr=filteredRecords(),y=today.slice(0,4),m=today.slice(0,7);
+ if(statsMetricTab==="today")return rr.filter(r=>r.date===today);
+ if(statsMetricTab==="month")return rr.filter(r=>String(r.date||"").slice(0,7)===m);
+ if(statsMetricTab==="year")return rr.filter(r=>String(r.date||"").slice(0,4)===y);
+ return rr;
+}
+function renderIntegratedRankStats(){
+ const summary=$("integratedRankSummary"),chart=$("integratedRankChart");
+ if(!summary||!chart)return;
+ const rr=statsMetricRecords();
+ let maxPlayers=4;
+ const storeId=$("statsStore")?.value;
+ if(storeId && storeId!=="all"){
+   const st=stores.find(x=>x.id===storeId); if(st)maxPlayers=+st.players||4;
+ }else if(rr.length){
+   maxPlayers=Math.max(...rr.map(r=>+r.players||storeForRecord(r)?.players||4));
+ }
+ const counts=Array.from({length:maxPlayers},(_,i)=>rr.filter(r=>+r.rank===i+1).length);
+ const max=Math.max(1,...counts);
+ const avg=rr.length?rr.reduce((a,r)=>a+(+r.rank||0),0)/rr.length:0;
+ summary.innerHTML=`<div class="rankgrid">${counts.map((n,i)=>`<div class="rankbox">${i+1}着<b>${n}回</b></div>`).join("")}</div><div class="note" style="margin-top:10px">平均着順：<b>${rr.length?avg.toFixed(2)+"着":"-"}</b> ／ ${rr.length}ゲーム</div>`;
+ chart.innerHTML=counts.map((n,i)=>`<div class="barwrap"><div class="barvalue">${n}回</div><div class="bar" style="height:${Math.max(2,n/max*120)}px"></div><div class="barlabel">${i+1}着</div></div>`).join("");
 }
 function renderStoreBreakdown(){
  const scope=$("statsStore").value,ss=scope==="all"?stores:stores.filter(s=>s.id===scope);
