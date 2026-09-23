@@ -623,7 +623,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.18</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.19</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -763,7 +763,7 @@ input,select{min-width:0}
 </main>
 <script>
 const $=id=>document.getElementById(id);
-const APP_VERSION="7.18";
+const APP_VERSION="7.19";
 const BACKUP_SCHEMA_VERSION=1;
 let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="month",historyExpanded=false,statsRankMode="today",statsMetricTab="today",gameFeeFree=false,gameTobi=false,pendingStoreMode=false,rankDayMode="today",rankMonth="",rankYear="";
 const rawStores=localStorage.getItem("fm_stores"), rawRecords=localStorage.getItem("fm_records");
@@ -777,20 +777,42 @@ rankMonth=today.slice(0,7);rankYear=today.slice(0,4);
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma),settlementRounding:s.settlementRounding||"halfUp"}));
-/* v7.0: known Cabo settings correction from the user's confirmed rules */
+/* v7.19: confirmed Cabo settings from the user's screenshots */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
-    return {...s,pointRate:100,startPoints:25000,returnPoints:30000,gameFee:600,topFee:(s.topFee==null?0:+s.topFee),umaType:"1-3"};
+    return {...s,players:4,pointRate:100,chipValue:500,startPoints:25000,returnPoints:30000,gameFee:600,topFee:300,belowZero:"no",tobiEnabled:"yes",tobiAmount:0,umaType:"1-3",settlementRounding:"fiveDownSixUp"};
   }
   return s;
 });
 records=records.map(r=>{const st=stores.find(x=>x.id===r.storeId)||stores.find(x=>x.shop===r.shop);const games=+r.games||1;const fee=st?(+st.gameFee||0)+((+r.rank===1)?(+st.topFee||0):0):0;return {...r,id:r.id||uid(),storeId:r.storeId||(st&&st.id)||"",gross:r.gross!=null?+r.gross:(+r.total||0)+fee,games:games}});
-// 2026-09-21に消失したことを確認済みの2局を一度だけ復元。
-if(!localStorage.getItem("fm_recovered_20260921") && records.length===0){
+// v7.19: remove obsolete placeholder recovery records and restore the 2026-09-23 data confirmed in screenshots.
+records=records.filter(r=>!(r.recovered===true && r.date==="2026-09-21"));
+{
   let st=stores.find(x=>x.shop==="麻雀カボ船橋店");
-  if(!st){st={id:uid(),shop:"麻雀カボ船橋店",players:4,pointRate:100,chipValue:500,gameFee:600,topFee:0,startPoints:25000,returnPoints:30000,belowZero:"no",tobiEnabled:"no",tobiAmount:0,umaType:"1-3",settlementRounding:"halfUp",memo:""};stores.push(st)}
-  records=[1,2].map(n=>({id:uid(),date:"2026-09-21",shop:st.shop,storeId:st.id,total:2500,gross:3000,rank:1,points:30000,chips:0,games:1,players:4,recovered:true}));
-  localStorage.setItem("fm_stores",JSON.stringify(stores));localStorage.setItem("fm_records",JSON.stringify(records));localStorage.setItem("fm_recovered_20260921","1");
+  if(!st){
+    st={id:uid(),shop:"麻雀カボ船橋店",players:4,pointRate:100,chipValue:500,gameFee:600,topFee:300,startPoints:25000,returnPoints:30000,belowZero:"no",tobiEnabled:"yes",tobiAmount:0,umaType:"1-3",settlementRounding:"fiveDownSixUp",memo:""};
+    stores.push(st);
+  }else{
+    Object.assign(st,{players:4,pointRate:100,chipValue:500,gameFee:600,topFee:300,startPoints:25000,returnPoints:30000,belowZero:"no",tobiEnabled:"yes",tobiAmount:0,umaType:"1-3",settlementRounding:"fiveDownSixUp"});
+  }
+  const confirmed=[
+    {seedId:"photo-20260923-1",rank:3,points:24800,chips:-2,total:-3100,gross:-2500,gameTobi:false},
+    {seedId:"photo-20260923-2",rank:4,points:0,chips:-6,total:-9600,gross:-9000,gameTobi:true},
+    {seedId:"photo-20260923-3",rank:4,points:0,chips:-4,total:-8600,gross:-8000,gameTobi:true},
+    {seedId:"photo-20260923-4",rank:2,points:31200,chips:0,total:500,gross:1100,gameTobi:false},
+    {seedId:"photo-20260923-5",rank:1,points:55000,chips:12,total:12600,gross:13500,gameTobi:false},
+    {seedId:"photo-20260923-6",rank:1,points:51500,chips:8,total:10200,gross:11100,gameTobi:false},
+    {seedId:"photo-20260923-7",rank:2,points:30000,chips:2,total:1400,gross:2000,gameTobi:false}
+  ];
+  const sameRecord=(r,d)=>r.date==="2026-09-23" && (r.storeId===st.id || r.shop===st.shop) && +r.rank===d.rank && +r.points===d.points && +r.chips===d.chips && +r.total===d.total;
+  confirmed.forEach(d=>{
+    if(!records.some(r=>sameRecord(r,d))){
+      records.push({id:d.seedId,date:"2026-09-23",shop:st.shop,storeId:st.id,total:d.total,gross:d.gross,rank:d.rank,points:d.points,chips:d.chips,games:1,players:4,gameFeeFree:false,gameTobi:d.gameTobi,pendingStore:false,photoRestored:true});
+    }
+  });
+  localStorage.setItem("fm_stores",JSON.stringify(stores));
+  localStorage.setItem("fm_records",JSON.stringify(records));
+  localStorage.setItem("fm_restored_20260923","1");
 }
 $("gameDate").value=today;
 
