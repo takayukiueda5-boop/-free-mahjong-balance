@@ -17,7 +17,7 @@ label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}.field{margin-
 .historyRow{width:100%;border:0;background:transparent;text-align:left;padding:0;color:inherit}.historyRow .month{align-items:center}.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:14px}.toolbar select{flex:1}.pillrow{display:flex;gap:7px;margin-bottom:14px}.pill{flex:1;border:1px solid #ddd;background:#fff;border-radius:999px;padding:9px 5px;font-size:13px}.pill.active{background:#202124;color:#fff;border-color:#202124}
 .rankgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 16px}.rankbox{background:#f7f7f7;border-radius:10px;padding:10px 5px;text-align:center}.rankbox b{display:block;font-size:20px}
 .chart{display:flex;align-items:flex-end;gap:10px;height:180px;padding:12px 4px 0;border-bottom:1px solid #ddd}.barwrap{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;min-width:0}.barvalue{font-size:11px;margin-bottom:4px;white-space:nowrap}.bar{width:70%;max-width:52px;background:#18794e;border-radius:6px 6px 0 0;min-height:2px}.bar.negbar{background:#b42318}.barlabel{font-size:11px;margin-top:5px;white-space:nowrap}.summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.summary div{background:#f7f7f7;border-radius:10px;padding:10px}.summary b{display:block;font-size:18px;margin-top:3px}
-.danger{width:100%;margin-top:10px;background:#fff;color:#b42318;border:1px solid #e6b8b3;border-radius:10px;padding:12px;font-weight:700}.gameNo{font-size:14px;font-weight:800;color:#18794e;margin:-5px 0 14px}.chipStepper{display:grid;grid-template-columns:56px 1fr 56px;gap:8px;align-items:center}.chipBtn{height:48px;border:1px solid #ccc;background:#f7f7f7;border-radius:10px;font-size:26px;font-weight:800}.chipValueBox{text-align:center;border:1px solid #ccc;border-radius:9px;padding:12px 6px;font-size:18px;font-weight:800;background:#fff}
+.danger{width:100%;margin-top:10px;background:#fff;color:#b42318;border:1px solid #e6b8b3;border-radius:10px;padding:12px;font-weight:700}.gameNo{font-size:14px;font-weight:800;color:#18794e;margin:-5px 0 14px}.gameContext{margin:0 0 16px;padding:14px 14px 12px;border-radius:14px;border:1px solid rgba(201,165,87,.38);background:linear-gradient(180deg,rgba(201,165,87,.10),rgba(201,165,87,.03));box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}.gameContextLabel{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:.03em}.gameContextMain{font-size:20px;font-weight:900;color:#f8f1dc;line-height:1.35;word-break:break-word}.gameContextSub{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}.gameContextPill{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;border:1px solid rgba(201,165,87,.28);background:rgba(7,17,13,.5);color:#f3efe4;font-size:13px;font-weight:800}.gameContextPill.modeSanma{background:rgba(29,140,91,.18);border-color:rgba(85,216,154,.28)}.gameContextPill.modeYonma{background:rgba(201,165,87,.12)}.chipStepper{display:grid;grid-template-columns:56px 1fr 56px;gap:8px;align-items:center}.chipBtn{height:48px;border:1px solid #ccc;background:#f7f7f7;border-radius:10px;font-size:26px;font-weight:800}.chipValueBox{text-align:center;border:1px solid #ccc;border-radius:9px;padding:12px 6px;font-size:18px;font-weight:800;background:#fff}
 .scoreChipRow{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px;align-items:start}
 .scoreField,.chipField{min-width:0}
 .scoreInputWrap{position:relative;width:100%;max-width:290px;display:grid;grid-template-columns:minmax(0,1fr) 74px}
@@ -606,7 +606,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.8</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.13</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -632,12 +632,13 @@ input,select{min-width:0}
 <div class="field"><label>トップ賞等（円/ゲーム）</label><input id="topFee" type="number" value="0"></div>
 </div>
 <div class="grid"><div class="field"><label>持ち点</label><input id="startPoints" type="number" value="25000"></div><div class="field"><label>返し点</label><input id="returnPoints" type="number" value="30000"></div></div>
+<div class="field"><label>最終持ち点の端数処理（1,000点単位）</label><select id="settlementRounding"><option value="halfUp">四捨五入</option><option value="fiveDownSixUp">五捨六入</option></select><div class="note" style="margin-top:6px">対局結果で入力した最終持ち点を1,000点単位に丸めてから収支を計算します。例：25,500点は、四捨五入なら26,000点／五捨六入なら25,000点。25,600点はどちらも26,000点です。</div></div>
 <div class="field"><label>箱下計算 <button class="helpBtn" type="button" aria-label="箱下計算の説明" onclick="toggleHelp('belowZeroHelp')">？</button></label><div id="belowZeroHelp" class="note helpNote">持ち点が0点を下回った場合も、マイナス点まで含めて精算するルールです。「無」の店舗では0点未満を入力できません。</div><select id="belowZero"><option value="yes">有（マイナス点まで計算）</option><option value="no">無（0点未満は入力不可）</option></select></div>
 <div class="field"><label>トビ <button class="helpBtn" type="button" aria-label="トビの説明" onclick="toggleHelp('tobiHelp')">？</button></label><div id="tobiHelp" class="note helpNote">持ち点がなくなり、対局の途中で終了することです。「有」にすると、結果入力画面で着順を最下位として簡単に記録できます。</div><select id="tobiEnabled" onchange="toggleTobiField()"><option value="no">無</option><option value="yes">有</option></select></div>
 <div class="field" id="tobiField" style="display:none"><label>トビ賞（金額・円）</label><input id="tobiAmount" type="number" min="0" step="100" value="0" placeholder="例：500"><div class="note" style="margin-top:6px">「トビ：有」の店舗だけ、対局入力画面で「トビ」を選択できます。</div></div>
 <div class="field" id="yonmaUmaField"><label>ウマ</label><select id="umaType">
-<option value="1-2">四麻 1-2（+2 / +1 / -1 / -2）</option><option value="1-3">四麻 1-3（+3 / +1 / -1 / -3）</option>
-<option value="2-3">四麻 2-3（+3 / +2 / -2 / -3）</option><option value="2-4">四麻 2-4（+4 / +2 / -2 / -4）</option>
+<option value="1-2">四麻1-2（ワンツー）</option><option value="1-3">四麻1-3（ワンスリー）</option>
+<option value="2-3">四麻2-3（ツースリー）</option><option value="2-4">四麻2-4（ツーフォー）</option>
 </select><div class="note" id="umaNote" style="margin-top:6px">四麻：1＝1,000点。順位ごとのウマを表示しています。</div></div>
 <div class="field" id="sanmaUmaField" style="display:none"><label>三麻ウマ（千点単位）</label>
 <select id="sanmaUmaPreset" onchange="updateSanmaUmaPreset()">
@@ -660,6 +661,7 @@ input,select{min-width:0}
 <section id="game" class="screen">
 <div class="card">
 <button class="back" type="button" onclick="cancelGameEdit()">← 店舗選択へ戻る</button>
+<div id="gameContext" class="gameContext"></div>
 <div id="todayRankSummary" style="margin-bottom:20px"></div>
 <div id="rankQuickStats" class="summary" style="margin-bottom:24px"></div>
 <h2 id="inputTitle">対局入力</h2>
@@ -742,7 +744,7 @@ const today=localToday();
 rankMonth=today.slice(0,7);rankYear=today.slice(0,4);
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
-stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma)}));
+stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma),settlementRounding:s.settlementRounding||"halfUp"}));
 /* v7.0: known Cabo settings correction from the user's confirmed rules */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
@@ -754,7 +756,7 @@ records=records.map(r=>{const st=stores.find(x=>x.id===r.storeId)||stores.find(x
 // 2026-09-21に消失したことを確認済みの2局を一度だけ復元。
 if(!localStorage.getItem("fm_recovered_20260921") && records.length===0){
   let st=stores.find(x=>x.shop==="麻雀カボ船橋店");
-  if(!st){st={id:uid(),shop:"麻雀カボ船橋店",players:4,pointRate:100,chipValue:500,gameFee:600,topFee:0,startPoints:25000,returnPoints:30000,belowZero:"no",tobiEnabled:"no",tobiAmount:0,umaType:"1-3",memo:""};stores.push(st)}
+  if(!st){st={id:uid(),shop:"麻雀カボ船橋店",players:4,pointRate:100,chipValue:500,gameFee:600,topFee:0,startPoints:25000,returnPoints:30000,belowZero:"no",tobiEnabled:"no",tobiAmount:0,umaType:"1-3",settlementRounding:"halfUp",memo:""};stores.push(st)}
   records=[1,2].map(n=>({id:uid(),date:"2026-09-21",shop:st.shop,storeId:st.id,total:2500,gross:3000,rank:1,points:30000,chips:0,games:1,players:4,recovered:true}));
   localStorage.setItem("fm_stores",JSON.stringify(stores));localStorage.setItem("fm_records",JSON.stringify(records));localStorage.setItem("fm_recovered_20260921","1");
 }
@@ -789,7 +791,7 @@ function updateUmaOptions(preferred){
  if(!isSanma){
    const sel=$("umaType");if(!sel)return;
    const current=preferred||sel.value||"1-2";
-   const options=[["1-2","四麻 1-2（+2 / +1 / -1 / -2）"],["1-3","四麻 1-3（+3 / +1 / -1 / -3）"],["2-3","四麻 2-3（+3 / +2 / -2 / -3）"],["2-4","四麻 2-4（+4 / +2 / -2 / -4）"]];
+   const options=[["1-2","四麻1-2（ワンツー）"],["1-3","四麻1-3（ワンスリー）"],["2-3","四麻2-3（ツースリー）"],["2-4","四麻2-4（ツーフォー）"]];
    sel.innerHTML=options.map(([v,label])=>`<option value="${v}">${label}</option>`).join("");
    sel.value=options.some(([v])=>v===current)?current:"1-2";
  }
@@ -833,15 +835,21 @@ function renderStores(){
  box.innerHTML=stores.map((s,i)=>`<div class="storeRow"><button class="store" type="button" onclick="selectStore(${i})">${esc(s.shop)}</button><button class="edit" type="button" onclick="editStore(${i})">編集</button></div>`).join("");
 }
 function openNewStore(){editStoreIndex=-1;$("registerTitle").textContent="店舗を登録";clearForm();toggleTobiField();if($("deleteStoreBtn"))$("deleteStoreBtn").classList.remove("show");show("register")}
-function clearForm(){["shop","memo"].forEach(id=>$(id).value="");$("players").value="4";updateUmaOptions("1-2");setSanmaUmaForm([20,0,-20]);$("pointRate").value="";$("chipValue").value="500";$("gameFee").value="600";$("topFee").value="0";$("startPoints").value="25000";$("returnPoints").value="30000";$("belowZero").value="no";$("tobiEnabled").value="no";$("tobiAmount").value="0"}
-function editStore(i){editStoreIndex=i;const s=stores[i];$("registerTitle").textContent="店舗設定を編集";if($("deleteStoreBtn"))$("deleteStoreBtn").classList.add("show");$("shop").value=s.shop;$("players").value=s.players;updateUmaOptions(s.umaType||"1-2");setSanmaUmaForm(s.sanmaUma||[20,0,-20]);$("pointRate").value=s.pointRate;$("chipValue").value=s.chipValue;$("gameFee").value=s.gameFee;$("topFee").value=s.topFee;$("startPoints").value=s.startPoints||25000;$("returnPoints").value=s.returnPoints;$("belowZero").value=s.belowZero||"no";$("tobiEnabled").value=(s.tobiEnabled==="yes"||(+s.tobiAmount||0)>0)?"yes":"no";$("tobiAmount").value=s.tobiAmount||0;$("memo").value=s.memo||"";toggleTobiField();show("register")}
+function clearForm(){["shop","memo"].forEach(id=>$(id).value="");$("players").value="4";updateUmaOptions("1-2");setSanmaUmaForm([20,0,-20]);$("pointRate").value="";$("chipValue").value="500";$("gameFee").value="600";$("topFee").value="0";$("startPoints").value="25000";$("returnPoints").value="30000";$("settlementRounding").value="halfUp";$("belowZero").value="no";$("tobiEnabled").value="no";$("tobiAmount").value="0"}
+function editStore(i){editStoreIndex=i;const s=stores[i];$("registerTitle").textContent="店舗設定を編集";if($("deleteStoreBtn"))$("deleteStoreBtn").classList.add("show");$("shop").value=s.shop;$("players").value=s.players;updateUmaOptions(s.umaType||"1-2");setSanmaUmaForm(s.sanmaUma||[20,0,-20]);$("pointRate").value=s.pointRate;$("chipValue").value=s.chipValue;$("gameFee").value=s.gameFee;$("topFee").value=s.topFee;$("startPoints").value=s.startPoints||25000;$("returnPoints").value=s.returnPoints;$("settlementRounding").value=s.settlementRounding||"halfUp";$("belowZero").value=s.belowZero||"no";$("tobiEnabled").value=(s.tobiEnabled==="yes"||(+s.tobiAmount||0)>0)?"yes":"no";$("tobiAmount").value=s.tobiAmount||0;$("memo").value=s.memo||"";toggleTobiField();show("register")}
 function toggleTobiField(){if($("tobiField"))$("tobiField").style.display=$("tobiEnabled")?.value==="yes"?"block":"none"}
 function saveStore(){
  const name=$("shop").value.trim();if(!name){alert("店舗名を入力してください。");return}
  if($("pointRate").value===""){alert("点数レートを入力してください。");return}
  const old=editStoreIndex>=0?stores[editStoreIndex]:null;
  const players=+$("players").value;
- const s={id:old?.id||uid(),shop:name,players,pointRate:+$("pointRate").value,chipValue:+$("chipValue").value,gameFee:+$("gameFee").value,topFee:+$("topFee").value,startPoints:+$("startPoints").value,returnPoints:+$("returnPoints").value,belowZero:$("belowZero").value,tobiEnabled:$("tobiEnabled").value,tobiAmount:+$("tobiAmount").value||0,umaType:$("umaType").value,sanmaUma:players===3?currentSanmaUma():(old?.sanmaUma||[20,0,-20]),memo:$("memo").value};
+ if(players===3){
+   const sanmaUma=currentSanmaUma();
+   if(sanmaUma.some(v=>!Number.isFinite(v))){alert("三麻ウマは1着・2着・3着すべてに数字を入力してください。");return}
+   const sanmaUmaTotal=sanmaUma.reduce((sum,v)=>sum+v,0);
+   if(Math.abs(sanmaUmaTotal)>1e-9){alert(`三麻ウマの合計は0になるように入力してください。\n現在の合計：${sanmaUmaTotal}`);return}
+ }
+ const s={id:old?.id||uid(),shop:name,players,pointRate:+$("pointRate").value,chipValue:+$("chipValue").value,gameFee:+$("gameFee").value,topFee:+$("topFee").value,startPoints:+$("startPoints").value,returnPoints:+$("returnPoints").value,settlementRounding:$("settlementRounding").value||"halfUp",belowZero:$("belowZero").value,tobiEnabled:$("tobiEnabled").value,tobiAmount:+$("tobiAmount").value||0,umaType:$("umaType").value,sanmaUma:players===3?currentSanmaUma():(old?.sanmaUma||[20,0,-20]),memo:$("memo").value};
  if(editStoreIndex>=0){stores[editStoreIndex]=s;records.forEach(r=>{if(r.storeId===s.id)r.shop=s.shop})}else stores.push(s);
  saveAll();editStoreIndex=-1;alert("店舗を保存しました。");show("home");
 }
@@ -905,12 +913,24 @@ function changeRecordStore(storeId){
  if(selected)localStorage.setItem("fm_selected_store_id",selected.id);else localStorage.removeItem("fm_selected_store_id");
  setupGameScreen();$("rank").value=String(Math.min(rank,selected?.players||4));updateRankButtons();updateGameNo();calc();
 }
+function renderGameContext(){
+ const el=$("gameContext");
+ if(!el)return;
+ if(!selected){
+   el.innerHTML=`<div class="gameContextLabel">現在の入力先</div><div class="gameContextMain">店舗未設定の対局を入力中</div><div class="gameContextSub"><span class="gameContextPill">店舗：未設定</span><span class="gameContextPill modeYonma">麻雀種別：未設定</span></div><div class="note" style="margin-top:8px">店舗を選ぶと、三麻 / 四麻がここに分かりやすく表示されます。</div>`;
+   return;
+ }
+ const mode=+selected.players===3?"三麻":"四麻";
+ const modeClass=+selected.players===3?"modeSanma":"modeYonma";
+ el.innerHTML=`<div class="gameContextLabel">現在の入力先</div><div class="gameContextMain">${esc(selected.shop)}</div><div class="gameContextSub"><span class="gameContextPill ${modeClass}">麻雀種別：${mode}</span><span class="gameContextPill">店舗：${esc(selected.shop)}</span></div>`;
+}
 function setupGameScreen(){
 const playerCount=selected?.players||4;
 $("rankButtons").innerHTML=Array.from({length:playerCount},(_,i)=>`<button type="button" class="rankBtn" data-rank="${i+1}" onclick="setRank(${i+1})">${i+1}着</button>`).join(""); updateRankButtons(); $("points").min=selected?.belowZero==="yes"?"":0;
  renderGameResultMode();
  $("inputTitle").textContent=editRecordIndex>=0?"対局記録を編集":"対局入力";$("recordBtn").textContent=editRecordIndex>=0?"変更を保存":"この結果を記録";$("deleteBtn").style.display=editRecordIndex>=0?"block":"none";
  populateRecordStoreSelect();if($("feeFreeRow"))$("feeFreeRow").style.display=selected?"":"none";
+ renderGameContext();
  renderRankQuickStats();renderGameFeeFree();
 }
 function renderRankQuickStats(){}
@@ -923,11 +943,11 @@ function setRank(r){
 }
 function updateRankButtons(){document.querySelectorAll(".rankBtn").forEach(b=>b.classList.toggle("active",b.dataset.rank===$("rank").value))}
 function updateGameNo(){if(!selected){$("gameNo").textContent="店舗未設定の対局";return}$("gameNo").textContent=`この日は ${nextGameNumber($("gameDate").value||today,selected.id,editRecordIndex)}ゲーム目`}
-function renderChipDisplay(){const v=Math.max(-10,Math.min(10,+$("chips").value||0));$("chips").value=v;if($("chipDisplay"))$("chipDisplay").textContent=(v>0?"+":"")+v+"枚";}
+function renderChipDisplay(){const v=Math.max(-30,Math.min(30,+$("chips").value||0));$("chips").value=v;if($("chipDisplay"))$("chipDisplay").textContent=(v>0?"+":"")+v+"枚";}
 function changeChips(d){
  ensureSelectedStore();
  const el=$("chips");
- const next=Math.max(-10,Math.min(10,(Number(el.value)||0)+d));
+ const next=Math.max(-30,Math.min(30,(Number(el.value)||0)+d));
  el.value=String(next);
  renderChipDisplay();
  calc();
@@ -1096,6 +1116,17 @@ function setGameResultMode(isTobi){
 
 
 
+function roundFinalPoints1000(value,method){
+ const n=Number(value)||0;
+ const sign=n<0?-1:1;
+ const a=Math.abs(n);
+ const base=Math.floor(a/1000)*1000;
+ const remainder=a-base;
+ // 四捨五入: 500点以上を切り上げ / 五捨六入: 500点は切り捨て、600点以上を切り上げ
+ const threshold=method==="fiveDownSixUp"?600:500;
+ return sign*(base+(remainder>=threshold?1000:0));
+}
+
 function calc(){
  updateScoreSuffix();
  ensureSelectedStore();
@@ -1130,19 +1161,22 @@ function calc(){
  const topFee=Number(selected.topFee||0);
  const tobiAmount=Number(selected.tobiAmount||0);
 
- const score=(p-returnPoints)/1000*pointRate;
+ const roundedPoints=roundFinalPoints1000(p,selected.settlementRounding||"halfUp");
+ const score=(roundedPoints-returnPoints)/1000*pointRate;
  const oka=okaYen(selected,r);
  const uma=umaYen(selected,r);
  const chip=c*chipValue;
- const gross=Math.round(score+oka+uma+chip);
+ const pointSettlement=score+oka+uma;
+ const gross=pointSettlement+chip;
  const fee=gameFeeFree?0:-gameFee;
  const extraFee=r===1?-topFee:0;
  const tobi=gameTobi?-tobiAmount:0;
- const total=Math.round(gross+fee+extraFee+tobi);
+ const total=gross+fee+extraFee+tobi;
 
  calcEl.textContent=fmt(total);
  calcEl.className="profit "+(total>=0?"pos":"neg");
- breakdownEl.innerHTML=`素点 ${fmt(score)} ＋ オカ ${fmt(oka)} ＋ ウマ ${fmt(uma)} ＋ チップ ${fmt(chip)}<br>ゲーム代抜き ${fmt(gross)} ／ ゲーム代 ${fmt(fee)}${extraFee?` ／ トップ賞 ${fmt(extraFee)}`:""}${tobi?` ／ トビ賞 ${fmt(tobi)}`:""}`;
+ const roundingLabel=(selected.settlementRounding||"halfUp")==="fiveDownSixUp"?"五捨六入":"四捨五入";
+ breakdownEl.innerHTML=`最終持ち点 ${Math.round(p).toLocaleString()}点 → 精算点 ${Math.round(roundedPoints).toLocaleString()}点（${roundingLabel}）<br>素点 ${fmt(score)} ＋ オカ ${fmt(oka)} ＋ ウマ ${fmt(uma)} ＋ チップ ${fmt(chip)}<br>ゲーム代抜き ${fmt(gross)} ／ ゲーム代 ${fmt(fee)}${extraFee?` ／ トップ賞 ${fmt(extraFee)}`:""}${tobi?` ／ トビ賞 ${fmt(tobi)}`:""}`;
 
  try{
    renderTodayRankSummary();
@@ -1175,7 +1209,7 @@ function recordGame(){
 }
 function editRecord(i){
  const r=records[i],s=storeForRecord(r);
- selected=s||null;pendingStoreMode=!s;if(s)localStorage.setItem("fm_selected_store_id",s.id);else localStorage.removeItem("fm_selected_store_id");editRecordIndex=i;gameTobi=!!r.gameTobi;setupGameScreen();$("gameDate").value=r.date;$("rank").value=String(r.rank);updateRankButtons();$("points").value=Math.round((+r.points||0)/100);updatePointsPreview();updateScoreSuffix();$("chips").value=Math.max(-10,Math.min(10,+r.chips||0));gameFeeFree=!!r.gameFeeFree;renderGameFeeFree();renderGameResultMode();renderChipDisplay();updateGameNo();show("game");calc();
+ selected=s||null;pendingStoreMode=!s;if(s)localStorage.setItem("fm_selected_store_id",s.id);else localStorage.removeItem("fm_selected_store_id");editRecordIndex=i;gameTobi=!!r.gameTobi;setupGameScreen();$("gameDate").value=r.date;$("rank").value=String(r.rank);updateRankButtons();$("points").value=Math.round((+r.points||0)/100);updatePointsPreview();updateScoreSuffix();$("chips").value=Math.max(-30,Math.min(30,+r.chips||0));gameFeeFree=!!r.gameFeeFree;renderGameFeeFree();renderGameResultMode();renderChipDisplay();updateGameNo();show("game");calc();
 }
 function deleteRecord(){if(editRecordIndex<0)return;if(!confirm("この対局記録を削除しますか？"))return;records.splice(editRecordIndex,1);saveAll();editRecordIndex=-1;showStats(selected?.id||"all")}
 function cancelGameEdit(){editRecordIndex=-1;pendingStoreMode=false;show("home")}
