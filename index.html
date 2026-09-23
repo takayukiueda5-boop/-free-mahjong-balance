@@ -623,7 +623,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.19</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.21</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -721,7 +721,7 @@ input,select{min-width:0}
 </div>
 <div id="feeFreeRow" class="feeFreeRow"><button id="feeFreeBtn" class="feeFreeBtn" type="button" onclick="toggleGameFeeFree()">ゲーム代無料：OFF</button></div>
 <button class="primary" style="margin:2px 0 14px" type="button" onclick="recordGame()" id="recordBtn">この結果を記録</button>
-<div class="result"><div class="note">今回の実収支（ゲーム代込み）</div><div class="profit" id="calc">0円</div><div id="breakdown"></div></div>
+<div class="result"><div class="note">今回の最終収支（ゲーム代込み）</div><div class="profit" id="calc">0円</div><div id="breakdown"></div></div>
 <button class="danger" type="button" id="deleteBtn" style="display:none" onclick="deleteRecord()">この対局記録を削除</button>
 </div>
 </section>
@@ -744,12 +744,21 @@ input,select{min-width:0}
 <button id="statsMetricYear" class="pill" type="button" onclick="setStatsMetricTab('year')">今年</button>
 <button id="statsMetricAll" class="pill" type="button" onclick="setStatsMetricTab('all')">累計</button>
 </div>
-<div id="statsPanelToday" class="statsMetricPanel active"><div class="statgrid"><div class="stat">実収支<b id="todayTotal">0円</b></div></div></div>
-<div id="statsPanelMonth" class="statsMetricPanel"><div class="statgrid"><div class="stat">実収支<b id="monthTotal">0円</b></div></div></div>
-<div id="statsPanelYear" class="statsMetricPanel"><div class="statgrid"><div class="stat">実収支<b id="yearTotal">0円</b></div></div></div>
+<div id="statsPanelToday" class="statsMetricPanel active"><div class="statgrid">
+<div class="stat">最終収支<b id="todayTotal">0円</b></div><div class="stat">対局収支<b id="todayGrossTotal">0円</b></div>
+<div class="stat">ゲーム代<b id="todayGameFeeTotal">0円</b></div>
+</div></div>
+<div id="statsPanelMonth" class="statsMetricPanel"><div class="statgrid">
+<div class="stat">最終収支<b id="monthTotal">0円</b></div><div class="stat">対局収支<b id="monthGrossTotal">0円</b></div>
+<div class="stat">ゲーム代<b id="monthGameFeeTotal">0円</b></div>
+</div></div>
+<div id="statsPanelYear" class="statsMetricPanel"><div class="statgrid">
+<div class="stat">最終収支<b id="yearTotal">0円</b></div><div class="stat">対局収支<b id="yearGrossTotal">0円</b></div>
+<div class="stat">ゲーム代<b id="yearGameFeeTotal">0円</b></div>
+</div></div>
 <div id="statsPanelAll" class="statsMetricPanel"><div class="statgrid">
-<div class="stat">累計・実収支<b id="allTotal">0円</b></div><div class="stat">累計・ゲーム代抜き<b id="grossTotal">0円</b></div>
-<div class="stat">累計・支払ゲーム代<b id="gameFeeTotal">0円</b></div>
+<div class="stat">最終収支<b id="allTotal">0円</b></div><div class="stat">対局収支<b id="grossTotal">0円</b></div>
+<div class="stat">ゲーム代<b id="gameFeeTotal">0円</b></div>
 </div></div>
 <div class="integratedRankBlock">
   <h3>着順成績</h3>
@@ -763,7 +772,7 @@ input,select{min-width:0}
 </main>
 <script>
 const $=id=>document.getElementById(id);
-const APP_VERSION="7.19";
+const APP_VERSION="7.21";
 const BACKUP_SCHEMA_VERSION=1;
 let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="month",historyExpanded=false,statsRankMode="today",statsMetricTab="today",gameFeeFree=false,gameTobi=false,pendingStoreMode=false,rankDayMode="today",rankMonth="",rankYear="";
 const rawStores=localStorage.getItem("fm_stores"), rawRecords=localStorage.getItem("fm_records");
@@ -777,7 +786,7 @@ rankMonth=today.slice(0,7);rankYear=today.slice(0,4);
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma),settlementRounding:s.settlementRounding||"halfUp"}));
-/* v7.19: confirmed Cabo settings from the user's screenshots */
+/* v7.21: stats period tabs share the same three metrics; confirmed Cabo settings preserved */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
     return {...s,players:4,pointRate:100,chipValue:500,startPoints:25000,returnPoints:30000,gameFee:600,topFee:300,belowZero:"no",tobiEnabled:"yes",tobiAmount:0,umaType:"1-3",settlementRounding:"fiveDownSixUp"};
@@ -1135,15 +1144,15 @@ function renderTodayRankSummary(){
    const net=g.records.reduce((a,o)=>a+(+o.r.total||0),0);
    const gross=g.records.reduce((a,o)=>a+recGross(o.r),0);
    const open=summaryEditStoreKey===g.key;
-   const editRows=open?`<div class="dayEditList">${g.records.slice().reverse().map(({r,i})=>`<button type="button" class="dayEditItem" onclick="editRecord(${i})"><b>${r.date}・${gameNumber(r,i)}ゲーム目　${r.rank}着</b><small>${(+r.points||0).toLocaleString()}点 / チップ${r.chips||0}枚 / 実収支 ${fmt(+r.total||0)}${r.gameTobi?" / トビ":""}</small></button>`).join("")}</div>`:"";
+   const editRows=open?`<div class="dayEditList">${g.records.slice().reverse().map(({r,i})=>`<button type="button" class="dayEditItem" onclick="editRecord(${i})"><b>${r.date}・${gameNumber(r,i)}ゲーム目　${r.rank}着</b><small>${(+r.points||0).toLocaleString()}点 / チップ${r.chips||0}枚 / 最終収支 ${fmt(+r.total||0)}${r.gameTobi?" / トビ":""}</small></button>`).join("")}</div>`:"";
    return `<div class="dayStoreCard">
      <div class="dayStoreName">${esc(g.name)}</div>
      <div class="dayRankGrid" style="grid-template-columns:repeat(${n},1fr)">
        ${counts.map((c,i)=>`<div class="dayRankCell"><div>${i+1}着</div><b>${c}回</b></div>`).join("")}
      </div>
      <div class="summary" style="margin-top:10px">
-       <div>実収支<b class="${net>=0?'pos':'neg'}">${fmt(net)}</b></div>
-       <div>ゲーム代抜き<b class="${gross>=0?'pos':'neg'}">${fmt(gross)}</b></div>
+       <div>最終収支<b class="${net>=0?'pos':'neg'}">${fmt(net)}</b></div>
+       <div>対局収支<b class="${gross>=0?'pos':'neg'}">${fmt(gross)}</b></div>
      </div>
      <button type="button" class="dayEditToggle" onclick="toggleSummaryEdit('${g.key.replace(/'/g,"\\'")}')">${open?"編集一覧を閉じる":"対局結果を編集"}</button>
      ${editRows}
@@ -1307,7 +1316,7 @@ function calc(){
  calcEl.textContent=fmt(total);
  calcEl.className="profit "+(total>=0?"pos":"neg");
  const roundingLabel=(selected.settlementRounding||"halfUp")==="fiveDownSixUp"?"五捨六入":"四捨五入";
- breakdownEl.innerHTML=`最終持ち点 ${Math.round(p).toLocaleString()}点 → 精算点 ${Math.round(roundedPoints).toLocaleString()}点（${roundingLabel}）<br>素点 ${fmt(score)} ＋ オカ ${fmt(oka)} ＋ ウマ ${fmt(uma)} ＋ チップ ${fmt(chip)}<br>ゲーム代抜き ${fmt(gross)} ／ ゲーム代 ${fmt(fee)}${extraFee?` ／ トップ賞 ${fmt(extraFee)}`:""}${tobi?` ／ トビ賞 ${fmt(tobi)}`:""}`;
+ breakdownEl.innerHTML=`最終持ち点 ${Math.round(p).toLocaleString()}点 → 精算点 ${Math.round(roundedPoints).toLocaleString()}点（${roundingLabel}）<br>素点 ${fmt(score)} ＋ オカ ${fmt(oka)} ＋ ウマ ${fmt(uma)} ＋ チップ ${fmt(chip)}<br>対局収支 ${fmt(gross)} ／ ゲーム代 ${fmt(fee)}${extraFee?` ／ トップ賞 ${fmt(extraFee)}`:""}${tobi?` ／ トビ賞 ${fmt(tobi)}`:""}`;
 
  try{
    renderTodayRankSummary();
@@ -1429,8 +1438,14 @@ function renderStats(){
  const rr=filteredRecords(),y=today.slice(0,4),m=today.slice(0,7),by=fn=>rr.filter(fn);
  const day=by(r=>r.date===today),mon=by(r=>r.date.slice(0,7)===m),yr=by(r=>r.date.slice(0,4)===y),all=sumOf(rr);
  setMoneyStat("todayTotal",sumOf(day));
+ setMoneyStat("todayGrossTotal",sumOf(day,"gross"));
+ setMoneyStat("todayGameFeeTotal",-totalPaidGameFees(day));
  setMoneyStat("monthTotal",sumOf(mon));
+ setMoneyStat("monthGrossTotal",sumOf(mon,"gross"));
+ setMoneyStat("monthGameFeeTotal",-totalPaidGameFees(mon));
  setMoneyStat("yearTotal",sumOf(yr));
+ setMoneyStat("yearGrossTotal",sumOf(yr,"gross"));
+ setMoneyStat("yearGameFeeTotal",-totalPaidGameFees(yr));
  setMoneyStat("allTotal",all);
  setMoneyStat("grossTotal",sumOf(rr,"gross"));
  setMoneyStat("gameFeeTotal",-totalPaidGameFees(rr));
