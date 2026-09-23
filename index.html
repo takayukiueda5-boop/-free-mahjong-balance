@@ -623,7 +623,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.21</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.22</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -786,7 +786,7 @@ rankMonth=today.slice(0,7);rankYear=today.slice(0,4);
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma),settlementRounding:s.settlementRounding||"halfUp"}));
-/* v7.21: stats period tabs share the same three metrics; confirmed Cabo settings preserved */
+/* v7.22: stats period tabs share the same three metrics; confirmed Cabo settings preserved */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
     return {...s,players:4,pointRate:100,chipValue:500,startPoints:25000,returnPoints:30000,gameFee:600,topFee:300,belowZero:"no",tobiEnabled:"yes",tobiAmount:0,umaType:"1-3",settlementRounding:"fiveDownSixUp"};
@@ -1316,7 +1316,7 @@ function calc(){
  calcEl.textContent=fmt(total);
  calcEl.className="profit "+(total>=0?"pos":"neg");
  const roundingLabel=(selected.settlementRounding||"halfUp")==="fiveDownSixUp"?"五捨六入":"四捨五入";
- breakdownEl.innerHTML=`最終持ち点 ${Math.round(p).toLocaleString()}点 → 精算点 ${Math.round(roundedPoints).toLocaleString()}点（${roundingLabel}）<br>素点 ${fmt(score)} ＋ オカ ${fmt(oka)} ＋ ウマ ${fmt(uma)} ＋ チップ ${fmt(chip)}<br>対局収支 ${fmt(gross)} ／ ゲーム代 ${fmt(fee)}${extraFee?` ／ トップ賞 ${fmt(extraFee)}`:""}${tobi?` ／ トビ賞 ${fmt(tobi)}`:""}`;
+ breakdownEl.innerHTML=`最終持ち点 ${Math.round(p).toLocaleString()}点 → 精算点 ${Math.round(roundedPoints).toLocaleString()}点（${roundingLabel}）<br>素点 ${fmt(score)} ＋ オカ ${fmt(oka)} ＋ ウマ ${fmt(uma)} ＋ チップ ${fmt(chip)}<br>対局収支 ${fmt(gross)} ／ ゲーム代 ${fmt(fee + extraFee)}${extraFee?`（トップ賞込）`:""}${tobi?` ／ トビ賞 ${fmt(tobi)}`:""}`;
 
  try{
    renderTodayRankSummary();
@@ -1414,7 +1414,11 @@ function sumOf(rr,key="total"){return rr.reduce((a,r)=>a+(key==="gross"?recGross
 function totalPaidGameFees(rr){
  return rr.reduce((sum,r)=>{
    const st=storeForRecord(r);
-   return sum + (st && !r.gameFeeFree ? (+st.gameFee||0)*(+r.games||1) : 0);
+   if(!st) return sum;
+   const games=(+r.games||1);
+   const gameFee = !r.gameFeeFree ? (+st.gameFee||0)*games : 0;
+   const topPrize = (+r.rank===1) ? (+st.topFee||0) : 0;
+   return sum + gameFee + topPrize;
  },0);
 }
 function setStatsMetricTab(tab){
