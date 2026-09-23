@@ -617,13 +617,13 @@ input,select{min-width:0}
   #game .scoreSuffix{width:44px !important;min-width:44px !important;}
 }
 
-.dateGameRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end}.dateGameRow .field{margin-bottom:0}.gameNo.inline{margin:0 0 12px;white-space:nowrap;padding-bottom:12px}.rankAverageNote{margin-top:10px;text-align:center;font-size:15px}.rankAverageNote b{font-weight:900}
-@media(max-width:560px){.dateGameRow{grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}.gameNo.inline{padding-bottom:12px;margin:0 0 12px;white-space:nowrap;font-size:13px}}
+.dateGameRow{display:grid;grid-template-columns:minmax(0,1fr) 122px;gap:10px;align-items:end;margin-bottom:14px}.dateGameRow .field{margin-bottom:0;min-width:0}.dateGameRow .field label{margin-bottom:8px}.gameNo.inline{height:52px;margin:0;display:flex;align-items:center;justify-content:center;white-space:nowrap;border:1px solid rgba(201,165,87,.38);border-radius:14px;background:rgba(7,17,13,.55);font-size:15px;font-weight:900;color:#65d99c;padding:0 10px}.rankAverageNote{margin-top:10px;text-align:center;font-size:15px}.rankAverageNote b{font-weight:900}
+@media(max-width:560px){.dateGameRow{grid-template-columns:minmax(0,1fr) 112px;gap:10px;align-items:end}.gameNo.inline{height:52px;margin:0;padding:0 8px;font-size:14px}}
 
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.24</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.25</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -786,7 +786,7 @@ rankMonth=today.slice(0,7);rankYear=today.slice(0,4);
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma),settlementRounding:s.settlementRounding||"halfUp"}));
-/* v7.24: keep game number inline with date field on mobile and preserve immediate result input layout */
+/* v7.25: option A date/game-number layout; game number remains automatic and non-editable */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
     return {...s,players:4,pointRate:100,chipValue:500,startPoints:25000,returnPoints:30000,gameFee:600,topFee:300,belowZero:"no",tobiEnabled:"yes",tobiAmount:0,umaType:"1-3",settlementRounding:"fiveDownSixUp"};
