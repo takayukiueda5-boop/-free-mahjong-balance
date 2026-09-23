@@ -618,12 +618,12 @@ input,select{min-width:0}
 }
 
 .dateGameRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end}.dateGameRow .field{margin-bottom:0}.gameNo.inline{margin:0 0 12px;white-space:nowrap;padding-bottom:12px}.rankAverageNote{margin-top:10px;text-align:center;font-size:15px}.rankAverageNote b{font-weight:900}
-@media(max-width:560px){.dateGameRow{grid-template-columns:1fr}.gameNo.inline{padding-bottom:0;margin:-4px 0 12px}}
+@media(max-width:560px){.dateGameRow{grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}.gameNo.inline{padding-bottom:12px;margin:0 0 12px;white-space:nowrap;font-size:13px}}
 
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.22</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.24</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -687,8 +687,6 @@ input,select{min-width:0}
 <div class="card">
 <button class="back" type="button" onclick="cancelGameEdit()">← 店舗選択へ戻る</button>
 <h2 id="inputTitle">対局入力</h2>
-<div id="todayRankSummary" style="margin-bottom:20px"></div>
-<div id="rankQuickStats" class="summary" style="margin-bottom:24px"></div>
 <div id="recordStoreField" class="field" style="display:none"><label>店舗</label><select id="recordStoreSelect" onchange="changeRecordStore(this.value)"></select><div class="note" style="margin-top:6px">店舗は後からでも変更できます。店舗未設定の間、収支は計算されません。</div></div>
 <div class="dateGameRow">
   <div class="field"><label>対局日</label><input id="gameDate" type="date" oninput="updateGameNo();calc()" onchange="updateGameNo();calc()"></div>
@@ -723,6 +721,8 @@ input,select{min-width:0}
 <button class="primary" style="margin:2px 0 14px" type="button" onclick="recordGame()" id="recordBtn">この結果を記録</button>
 <div class="result"><div class="note">今回の最終収支（ゲーム代込み）</div><div class="profit" id="calc">0円</div><div id="breakdown"></div></div>
 <button class="danger" type="button" id="deleteBtn" style="display:none" onclick="deleteRecord()">この対局記録を削除</button>
+<div id="todayRankSummary" style="margin:22px 0 18px"></div>
+<div id="rankQuickStats" class="summary" style="margin-bottom:0"></div>
 </div>
 </section>
 
@@ -786,7 +786,7 @@ rankMonth=today.slice(0,7);rankYear=today.slice(0,4);
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma),settlementRounding:s.settlementRounding||"halfUp"}));
-/* v7.22: stats period tabs share the same three metrics; confirmed Cabo settings preserved */
+/* v7.24: keep game number inline with date field on mobile and preserve immediate result input layout */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
     return {...s,players:4,pointRate:100,chipValue:500,startPoints:25000,returnPoints:30000,gameFee:600,topFee:300,belowZero:"no",tobiEnabled:"yes",tobiAmount:0,umaType:"1-3",settlementRounding:"fiveDownSixUp"};
