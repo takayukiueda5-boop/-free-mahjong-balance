@@ -114,6 +114,21 @@ input:focus,select:focus{
   color:#f3e5bd;
   border-color:rgba(201,165,87,.55);
 }
+.homeAux{
+  margin-top:14px;
+  text-align:center;
+  font-weight:800;
+  letter-spacing:.02em;
+  padding:18px 20px;
+  background:linear-gradient(180deg,rgba(21,35,28,.98),rgba(11,19,15,.98));
+  border:1px dashed rgba(201,165,87,.48);
+  box-shadow:none;
+  color:#f3e7c9;
+}
+.homeAux:hover{border-color:rgba(85,216,154,.52);background:linear-gradient(180deg,rgba(25,42,33,.98),rgba(13,22,17,.98))}
+.homeAuxGroup{margin-top:20px;padding-top:16px;border-top:1px solid rgba(201,165,87,.18)}
+.homeAuxLabel{font-size:12px;font-weight:800;letter-spacing:.08em;color:#9ba49d;margin-bottom:6px}
+.homeAuxGroup .homeAux{margin-top:8px}
 .edit{
   float:right;
   background:#14241d;
@@ -349,6 +364,17 @@ input,select{min-width:0}
 .statsMetricPanel.active{display:block}
 .statsMetricPanel .statgrid{margin-top:0}
 .statsMetricPanel .stat{min-height:86px;display:flex;flex-direction:column;justify-content:center}
+.statsMetricPanel .statgrid .stat:nth-child(3){grid-column:1 / -1}
+.statsMetricPanel .chipStat{min-height:76px;display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:14px}
+.statsMetricPanel .chipStat b{margin-top:0;text-align:right}
+.recentGameCard{padding:14px 0;border-bottom:1px solid rgba(201,165,87,.16)}
+.recentGameCard:last-child{border-bottom:0}
+.recentGameTop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start}
+.recentGameTitle{font-size:16px;font-weight:800;color:#f4ead2;line-height:1.35}
+.recentGameAmount{font-size:19px;font-weight:900;white-space:nowrap;text-align:right}
+.recentGameMeta{margin-top:7px;color:#aab2ab;font-size:13px;line-height:1.55}
+.recentGameSub{margin-top:4px;color:#8f9b93;font-size:12px}
+@media(max-width:520px){.recentGameTitle{font-size:15px}.recentGameAmount{font-size:18px}.recentGameMeta{font-size:12px}}
 .statsMetricPanel .stat b.neg{color:var(--red)}
 .statsMetricPanel .stat b.pos{color:var(--mint)}
 .integratedRankBlock{margin-top:18px;padding-top:16px;border-top:1px solid rgba(201,165,87,.22)}
@@ -623,18 +649,21 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.25</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.28</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
 <h1>今日はどこの店舗ですか？</h1>
 <div class="sub">店舗を選ぶと、その店舗のルールと成績を自動で読み込みます。</div>
 <div id="storeList"></div>
-<button class="store" type="button" onclick="openUnassignedGame()">店舗を選ばず結果だけ入力</button>
-<button class="store add" type="button" onclick="openNewStore()">＋ 新しい店舗を登録</button>
-<div id="homeToday" style="margin:16px 0 4px"></div>
+<div class="homeAuxGroup">
+  <div class="homeAuxLabel">その他</div>
+  <button class="store homeAux" type="button" onclick="openUnassignedGame()">📝 店舗を選ばず結果だけ入力</button>
+  <button class="store add homeAux" type="button" onclick="openNewStore()">＋ 新しい店舗を登録</button>
 </div>
-<div class="card"><button class="primary" type="button" onclick="showStats()">成績を見る</button></div>
+<div id="homeToday" style="margin:18px 0 4px"></div>
+</div>
+<div class="card"><button class="primary" type="button" onclick="showStats()">成績管理を見る</button></div>
 <div class="card">
 <h2>データ管理</h2>
 <div class="note" style="margin-bottom:12px">店舗設定・対局履歴などのアプリデータを1つのバックアップファイルに保存できます。機種変更時は、旧端末でバックアップを作成し、新端末で復元してください。</div>
@@ -736,7 +765,7 @@ input,select{min-width:0}
 <div id="statsTopRankSummary"></div>
 </div>
 <div class="card"><h2>最近の対局</h2><div class="note" style="margin-bottom:8px">タップすると内容を編集できます。</div><div id="history"></div></div>
-<div class="card"><h2>成績</h2>
+<div class="card"><h2>成績管理</h2>
 <div class="toolbar"><select id="statsStore" onchange="renderStats()"></select></div>
 <div class="pillrow statsMetricTabs">
 <button id="statsMetricToday" class="pill active" type="button" onclick="setStatsMetricTab('today')">今日</button>
@@ -746,19 +775,19 @@ input,select{min-width:0}
 </div>
 <div id="statsPanelToday" class="statsMetricPanel active"><div class="statgrid">
 <div class="stat">最終収支<b id="todayTotal">0円</b></div><div class="stat">対局収支<b id="todayGrossTotal">0円</b></div>
-<div class="stat">ゲーム代<b id="todayGameFeeTotal">0円</b></div>
+<div class="stat chipStat">チップ収支<b id="todayChipTotal">0円</b></div>
 </div></div>
 <div id="statsPanelMonth" class="statsMetricPanel"><div class="statgrid">
 <div class="stat">最終収支<b id="monthTotal">0円</b></div><div class="stat">対局収支<b id="monthGrossTotal">0円</b></div>
-<div class="stat">ゲーム代<b id="monthGameFeeTotal">0円</b></div>
+<div class="stat chipStat">チップ収支<b id="monthChipTotal">0円</b></div>
 </div></div>
 <div id="statsPanelYear" class="statsMetricPanel"><div class="statgrid">
 <div class="stat">最終収支<b id="yearTotal">0円</b></div><div class="stat">対局収支<b id="yearGrossTotal">0円</b></div>
-<div class="stat">ゲーム代<b id="yearGameFeeTotal">0円</b></div>
+<div class="stat chipStat">チップ収支<b id="yearChipTotal">0円</b></div>
 </div></div>
 <div id="statsPanelAll" class="statsMetricPanel"><div class="statgrid">
 <div class="stat">最終収支<b id="allTotal">0円</b></div><div class="stat">対局収支<b id="grossTotal">0円</b></div>
-<div class="stat">ゲーム代<b id="gameFeeTotal">0円</b></div>
+<div class="stat chipStat">チップ収支<b id="chipTotal">0円</b></div>
 </div></div>
 <div class="integratedRankBlock">
   <h3>着順成績</h3>
@@ -786,7 +815,7 @@ rankMonth=today.slice(0,7);rankYear=today.slice(0,4);
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma),settlementRounding:s.settlementRounding||"halfUp"}));
-/* v7.25: option A date/game-number layout; game number remains automatic and non-editable */
+/* v7.28: refine home spacing, stats metric hierarchy, and recent-game cards without changing stored results */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
     return {...s,players:4,pointRate:100,chipValue:500,startPoints:25000,returnPoints:30000,gameFee:600,topFee:300,belowZero:"no",tobiEnabled:"yes",tobiAmount:0,umaType:"1-3",settlementRounding:"fiveDownSixUp"};
@@ -817,6 +846,19 @@ records=records.filter(r=>!(r.recovered===true && r.date==="2026-09-21"));
   confirmed.forEach(d=>{
     if(!records.some(r=>sameRecord(r,d))){
       records.push({id:d.seedId,date:"2026-09-23",shop:st.shop,storeId:st.id,total:d.total,gross:d.gross,rank:d.rank,points:d.points,chips:d.chips,games:1,players:4,gameFeeFree:false,gameTobi:d.gameTobi,pendingStore:false,photoRestored:true});
+    }
+  });
+  const confirmed20260925=[
+    {seedId:"photo-20260925-1",rank:1,points:30700,chips:1,total:4700,gross:5600,gameTobi:false},
+    {seedId:"photo-20260925-2",rank:1,points:30800,chips:-1,total:3700,gross:4600,gameTobi:false},
+    {seedId:"photo-20260925-3",rank:1,points:46900,chips:1,total:6300,gross:7200,gameTobi:false},
+    {seedId:"photo-20260925-4",rank:3,points:24800,chips:10,total:2900,gross:3500,gameTobi:false},
+    {seedId:"photo-20260925-5",rank:3,points:31900,chips:3,total:100,gross:700,gameTobi:false}
+  ];
+  const sameRecord20260925=(r,d)=>r.date==="2026-09-25" && (r.storeId===st.id || r.shop===st.shop) && +r.rank===d.rank && +r.points===d.points && +r.chips===d.chips && +r.total===d.total;
+  confirmed20260925.forEach(d=>{
+    if(!records.some(r=>sameRecord20260925(r,d))){
+      records.push({id:d.seedId,date:"2026-09-25",shop:st.shop,storeId:st.id,total:d.total,gross:d.gross,rank:d.rank,points:d.points,chips:d.chips,games:1,players:4,gameFeeFree:false,gameTobi:d.gameTobi,pendingStore:false,photoRestored:true});
     }
   });
   localStorage.setItem("fm_stores",JSON.stringify(stores));
@@ -1421,6 +1463,13 @@ function totalPaidGameFees(rr){
    return sum + gameFee + topPrize;
  },0);
 }
+function totalChipIncome(rr){
+ return rr.reduce((sum,r)=>{
+   const st=storeForRecord(r);
+   if(!st) return sum;
+   return sum + ((+r.chips||0) * (+st.chipValue||0));
+ },0);
+}
 function setStatsMetricTab(tab){
  statsMetricTab=tab;
  ["today","month","year","all"].forEach(k=>{
@@ -1443,16 +1492,16 @@ function renderStats(){
  const day=by(r=>r.date===today),mon=by(r=>r.date.slice(0,7)===m),yr=by(r=>r.date.slice(0,4)===y),all=sumOf(rr);
  setMoneyStat("todayTotal",sumOf(day));
  setMoneyStat("todayGrossTotal",sumOf(day,"gross"));
- setMoneyStat("todayGameFeeTotal",-totalPaidGameFees(day));
+ setMoneyStat("todayChipTotal",totalChipIncome(day));
  setMoneyStat("monthTotal",sumOf(mon));
  setMoneyStat("monthGrossTotal",sumOf(mon,"gross"));
- setMoneyStat("monthGameFeeTotal",-totalPaidGameFees(mon));
+ setMoneyStat("monthChipTotal",totalChipIncome(mon));
  setMoneyStat("yearTotal",sumOf(yr));
  setMoneyStat("yearGrossTotal",sumOf(yr,"gross"));
- setMoneyStat("yearGameFeeTotal",-totalPaidGameFees(yr));
+ setMoneyStat("yearChipTotal",totalChipIncome(yr));
  setMoneyStat("allTotal",all);
  setMoneyStat("grossTotal",sumOf(rr,"gross"));
- setMoneyStat("gameFeeTotal",-totalPaidGameFees(rr));
+ setMoneyStat("chipTotal",totalChipIncome(rr));
  setStatsMetricTab(statsMetricTab);
  renderStatsTopRanks();renderIntegratedRankStats();renderHistory(rr);
 }
@@ -1537,7 +1586,18 @@ function renderHistory(rr){
  const allowed=new Set(rr.map(r=>r.id));
  const all=records.map((r,i)=>({r,i})).filter(o=>allowed.has(o.r.id)).reverse();
  const items=historyExpanded?all:all.slice(0,4);
- const rows=items.map(({r,i})=>{const pending=!storeForRecord(r)||r.pendingStore;const amount=pending?`<b>未計算<small style="display:block;font-weight:400;color:#777">店舗を設定してください</small></b>`:`<b class="${(+r.total||0)>=0?'pos':'neg'}">${fmt(+r.total||0)}<small style="display:block;font-weight:400;color:#777">抜き ${fmt(recGross(r))}</small></b>`;return `<div class="swipeWrap"><button class="swipeDelete" type="button" onclick="deleteHistoryRecord(${i},event)">削除</button><div class="swipeRow" ontouchstart="swipeStart(event,this)" ontouchend="swipeEnd(event,this)" onclick="if(!this.classList.contains('open'))editRecord(${i})"><div class="month"><span>${r.date}・${gameNumber(r,i)}ゲーム目<br><small>${esc(r.shop||"店舗未設定")} / ${r.rank}着 / ${(+r.points||0).toLocaleString()}点 / チップ${r.chips||0}枚${r.gameFeeFree?" / ゲーム代無料":""}${r.gameTobi?" / トビ":""}</small></span>${amount}</div></div></div>`}).join("");
+ const rows=items.map(({r,i})=>{
+   const pending=!storeForRecord(r)||r.pendingStore;
+   const net=+r.total||0, gross=recGross(r);
+   const amount=pending
+     ? `<div class="recentGameAmount">未計算</div>`
+     : `<div class="recentGameAmount ${net>=0?'pos':'neg'}">${fmt(net)}</div>`;
+   const sub=pending
+     ? `店舗を設定してください`
+     : `対局収支 ${fmt(gross)}`;
+   const flags=`${r.gameFeeFree?' / ゲーム代無料':''}${r.gameTobi?' / トビ':''}`;
+   return `<div class="swipeWrap"><button class="swipeDelete" type="button" onclick="deleteHistoryRecord(${i},event)">削除</button><div class="swipeRow" ontouchstart="swipeStart(event,this)" ontouchend="swipeEnd(event,this)" onclick="if(!this.classList.contains('open'))editRecord(${i})"><div class="recentGameCard"><div class="recentGameTop"><div class="recentGameTitle">${r.date}・${gameNumber(r,i)}ゲーム目</div>${amount}</div><div class="recentGameMeta">${esc(r.shop||'店舗未設定')} / ${r.rank}着 / ${(+r.points||0).toLocaleString()}点 / チップ${r.chips||0}枚${flags}</div><div class="recentGameSub">${sub}</div></div></div></div>`;
+ }).join("");
  let fold="";
  if(all.length>4){
    fold=`<button class="foldBtn" type="button" onclick="toggleHistory()">${historyExpanded?"過去の対局を閉じる":`さらに表示（残り${all.length-4}件）`}</button>`;
