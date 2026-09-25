@@ -364,9 +364,6 @@ input,select{min-width:0}
 .statsMetricPanel.active{display:block}
 .statsMetricPanel .statgrid{margin-top:0}
 .statsMetricPanel .stat{min-height:86px;display:flex;flex-direction:column;justify-content:center}
-.statsMetricPanel .statgrid .stat:nth-child(3){grid-column:1 / -1}
-.statsMetricPanel .chipStat{min-height:76px;display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:14px}
-.statsMetricPanel .chipStat b{margin-top:0;text-align:right}
 .recentGameCard{padding:14px 0;border-bottom:1px solid rgba(201,165,87,.16)}
 .recentGameCard:last-child{border-bottom:0}
 .recentGameTop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start}
@@ -649,7 +646,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.28</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.29</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -775,19 +772,19 @@ input,select{min-width:0}
 </div>
 <div id="statsPanelToday" class="statsMetricPanel active"><div class="statgrid">
 <div class="stat">最終収支<b id="todayTotal">0円</b></div><div class="stat">対局収支<b id="todayGrossTotal">0円</b></div>
-<div class="stat chipStat">チップ収支<b id="todayChipTotal">0円</b></div>
+<div class="stat">チップ収支<b id="todayChipTotal">0円</b></div><div class="stat">ゲーム代<b id="todayGameFeeTotal">0円</b></div>
 </div></div>
 <div id="statsPanelMonth" class="statsMetricPanel"><div class="statgrid">
 <div class="stat">最終収支<b id="monthTotal">0円</b></div><div class="stat">対局収支<b id="monthGrossTotal">0円</b></div>
-<div class="stat chipStat">チップ収支<b id="monthChipTotal">0円</b></div>
+<div class="stat">チップ収支<b id="monthChipTotal">0円</b></div><div class="stat">ゲーム代<b id="monthGameFeeTotal">0円</b></div>
 </div></div>
 <div id="statsPanelYear" class="statsMetricPanel"><div class="statgrid">
 <div class="stat">最終収支<b id="yearTotal">0円</b></div><div class="stat">対局収支<b id="yearGrossTotal">0円</b></div>
-<div class="stat chipStat">チップ収支<b id="yearChipTotal">0円</b></div>
+<div class="stat">チップ収支<b id="yearChipTotal">0円</b></div><div class="stat">ゲーム代<b id="yearGameFeeTotal">0円</b></div>
 </div></div>
 <div id="statsPanelAll" class="statsMetricPanel"><div class="statgrid">
 <div class="stat">最終収支<b id="allTotal">0円</b></div><div class="stat">対局収支<b id="grossTotal">0円</b></div>
-<div class="stat chipStat">チップ収支<b id="chipTotal">0円</b></div>
+<div class="stat">チップ収支<b id="chipTotal">0円</b></div><div class="stat">ゲーム代<b id="gameFeeTotal">0円</b></div>
 </div></div>
 <div class="integratedRankBlock">
   <h3>着順成績</h3>
@@ -815,7 +812,7 @@ rankMonth=today.slice(0,7);rankYear=today.slice(0,4);
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma),settlementRounding:s.settlementRounding||"halfUp"}));
-/* v7.28: refine home spacing, stats metric hierarchy, and recent-game cards without changing stored results */
+/* v7.29: refine home spacing, stats metric hierarchy, and recent-game cards without changing stored results */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
     return {...s,players:4,pointRate:100,chipValue:500,startPoints:25000,returnPoints:30000,gameFee:600,topFee:300,belowZero:"no",tobiEnabled:"yes",tobiAmount:0,umaType:"1-3",settlementRounding:"fiveDownSixUp"};
@@ -1493,15 +1490,19 @@ function renderStats(){
  setMoneyStat("todayTotal",sumOf(day));
  setMoneyStat("todayGrossTotal",sumOf(day,"gross"));
  setMoneyStat("todayChipTotal",totalChipIncome(day));
+ setMoneyStat("todayGameFeeTotal",-totalPaidGameFees(day));
  setMoneyStat("monthTotal",sumOf(mon));
  setMoneyStat("monthGrossTotal",sumOf(mon,"gross"));
  setMoneyStat("monthChipTotal",totalChipIncome(mon));
+ setMoneyStat("monthGameFeeTotal",-totalPaidGameFees(mon));
  setMoneyStat("yearTotal",sumOf(yr));
  setMoneyStat("yearGrossTotal",sumOf(yr,"gross"));
  setMoneyStat("yearChipTotal",totalChipIncome(yr));
+ setMoneyStat("yearGameFeeTotal",-totalPaidGameFees(yr));
  setMoneyStat("allTotal",all);
  setMoneyStat("grossTotal",sumOf(rr,"gross"));
  setMoneyStat("chipTotal",totalChipIncome(rr));
+ setMoneyStat("gameFeeTotal",-totalPaidGameFees(rr));
  setStatsMetricTab(statsMetricTab);
  renderStatsTopRanks();renderIntegratedRankStats();renderHistory(rr);
 }
