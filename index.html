@@ -646,7 +646,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.29</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.31</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -758,7 +758,7 @@ input,select{min-width:0}
   <div id="nextGameFromStats"></div>
 </div>
 <div class="card statsTopRanks">
-<div class="pillrow"><button id="statsTodayBtn" class="pill active" type="button" onclick="setStatsRankMode('today')">今日</button><button id="statsCarryBtn" class="pill" type="button" onclick="setStatsRankMode('carry')">前日から合算</button></div>
+<div class="pillrow"><button id="statsTodayBtn" class="pill active" type="button" onclick="setStatsRankMode('today')">今日</button><button id="statsCarryBtn" class="pill" type="button" onclick="setStatsRankMode('carry')">前日から合算</button><button id="statsTotalBtn" class="pill" type="button" onclick="setStatsRankMode('total')">トータル</button></div>
 <div id="statsTopRankSummary"></div>
 </div>
 <div class="card"><h2>最近の対局</h2><div class="note" style="margin-bottom:8px">タップすると内容を編集できます。</div><div id="history"></div></div>
@@ -812,6 +812,8 @@ rankMonth=today.slice(0,7);rankYear=today.slice(0,4);
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma),settlementRounding:s.settlementRounding||"halfUp"}));
+/* v7.31: top placement-count summary (today/carry/total) always aggregates all stores */
+/* v7.30: add total placement-count tab to top stats summary without changing stored results */
 /* v7.29: refine home spacing, stats metric hierarchy, and recent-game cards without changing stored results */
 stores=stores.map(s=>{
   if(s.shop==="麻雀カボ船橋店"){
@@ -1429,20 +1431,19 @@ function setStatsRankMode(mode){
  statsRankMode=mode;
  if($("statsTodayBtn"))$("statsTodayBtn").classList.toggle("active",mode==="today");
  if($("statsCarryBtn"))$("statsCarryBtn").classList.toggle("active",mode==="carry");
+ if($("statsTotalBtn"))$("statsTotalBtn").classList.toggle("active",mode==="total");
  renderStatsTopRanks();
 }
 function renderStatsTopRanks(){
  const box=$("statsTopRankSummary"); if(!box)return;
- const base=filteredRecords();
+ // This top summary is intentionally independent of the store selector below.
+ // Today, previous-day carryover, and total always aggregate every store.
+ const base=records;
  const prev=dateShift(today,-1);
  const dates=statsRankMode==="carry"?[prev,today]:[today];
- const rr=base.filter(r=>dates.includes(r.date));
+ const rr=statsRankMode==="total"?base:base.filter(r=>dates.includes(r.date));
  let maxPlayers=4;
- const storeId=$("statsStore")?.value;
- if(storeId && storeId!=="all"){
-   const st=stores.find(x=>x.id===storeId);
-   if(st)maxPlayers=+st.players||4;
- }else if(rr.length){
+ if(rr.length){
    maxPlayers=Math.max(...rr.map(r=>+r.players||storeForRecord(r)?.players||4));
  }
  const counts=Array.from({length:maxPlayers},(_,i)=>rr.filter(r=>+r.rank===i+1).length);
