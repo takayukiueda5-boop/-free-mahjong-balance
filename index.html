@@ -646,7 +646,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.31</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.32</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -758,17 +758,17 @@ input,select{min-width:0}
   <div id="nextGameFromStats"></div>
 </div>
 <div class="card statsTopRanks">
-<div class="pillrow"><button id="statsTodayBtn" class="pill active" type="button" onclick="setStatsRankMode('today')">今日</button><button id="statsCarryBtn" class="pill" type="button" onclick="setStatsRankMode('carry')">前日から合算</button><button id="statsTotalBtn" class="pill" type="button" onclick="setStatsRankMode('total')">トータル</button></div>
+<div class="pillrow"><button id="statsTodayBtn" class="pill active" type="button" onclick="setStatsRankMode('today')">今日</button><button id="statsTotalBtn" class="pill" type="button" onclick="setStatsRankMode('total')">トータル</button><button id="statsCarryBtn" class="pill" type="button" onclick="setStatsRankMode('carry')">前日から合算</button></div>
 <div id="statsTopRankSummary"></div>
 </div>
 <div class="card"><h2>最近の対局</h2><div class="note" style="margin-bottom:8px">タップすると内容を編集できます。</div><div id="history"></div></div>
 <div class="card"><h2>成績管理</h2>
 <div class="toolbar"><select id="statsStore" onchange="renderStats()"></select></div>
 <div class="pillrow statsMetricTabs">
+<button id="statsMetricAll" class="pill" type="button" onclick="setStatsMetricTab('all')">累計</button>
 <button id="statsMetricToday" class="pill active" type="button" onclick="setStatsMetricTab('today')">今日</button>
 <button id="statsMetricMonth" class="pill" type="button" onclick="setStatsMetricTab('month')">今月</button>
 <button id="statsMetricYear" class="pill" type="button" onclick="setStatsMetricTab('year')">今年</button>
-<button id="statsMetricAll" class="pill" type="button" onclick="setStatsMetricTab('all')">累計</button>
 </div>
 <div id="statsPanelToday" class="statsMetricPanel active"><div class="statgrid">
 <div class="stat">最終収支<b id="todayTotal">0円</b></div><div class="stat">対局収支<b id="todayGrossTotal">0円</b></div>
@@ -812,6 +812,7 @@ rankMonth=today.slice(0,7);rankYear=today.slice(0,4);
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma),settlementRounding:s.settlementRounding||"halfUp"}));
+/* v7.32: reorder stats tabs (all/today/month/year; today/total/carry) */
 /* v7.31: top placement-count summary (today/carry/total) always aggregates all stores */
 /* v7.30: add total placement-count tab to top stats summary without changing stored results */
 /* v7.29: refine home spacing, stats metric hierarchy, and recent-game cards without changing stored results */
