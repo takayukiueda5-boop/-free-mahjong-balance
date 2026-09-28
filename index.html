@@ -648,7 +648,7 @@ input,select{min-width:0}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.33</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.36</small></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -760,17 +760,17 @@ input,select{min-width:0}
   <div id="nextGameFromStats"></div>
 </div>
 <div class="card statsTopRanks">
-<div class="pillrow"><button id="statsTodayBtn" class="pill active" type="button" onclick="setStatsRankMode('today')">今日</button><button id="statsPreviousBtn" class="pill" type="button" onclick="setStatsRankMode('previous')">前回</button><button id="statsCarryBtn" class="pill" type="button" onclick="setStatsRankMode('carry')">前日から合算</button><button id="statsTotalBtn" class="pill" type="button" onclick="setStatsRankMode('total')">トータル</button></div>
+<div class="pillrow"><button id="statsTotalBtn" class="pill active" type="button" onclick="setStatsRankMode('total')">累計</button><button id="statsTodayBtn" class="pill" type="button" onclick="setStatsRankMode('today')">今日</button><button id="statsPreviousBtn" class="pill" type="button" onclick="setStatsRankMode('previous')">前回</button><button id="statsCarryBtn" class="pill" type="button" onclick="setStatsRankMode('carry')">前日から合算</button></div>
 <div id="statsTopRankSummary"></div>
 </div>
 <div class="card"><h2>最近の対局</h2><div class="note" style="margin-bottom:8px">タップすると内容を編集できます。</div><div id="history"></div></div>
 <div class="card"><h2>成績管理</h2>
 <div class="toolbar"><select id="statsStore" onchange="renderStats()"></select></div>
 <div class="pillrow statsMetricTabs">
-<button id="statsMetricToday" class="pill active" type="button" onclick="setStatsMetricTab('today')">今日</button>
+<button id="statsMetricAll" class="pill active" type="button" onclick="setStatsMetricTab('all')">累計</button>
+<button id="statsMetricToday" class="pill" type="button" onclick="setStatsMetricTab('today')">今日</button>
 <button id="statsMetricMonth" class="pill" type="button" onclick="setStatsMetricTab('month')">今月</button>
 <button id="statsMetricYear" class="pill" type="button" onclick="setStatsMetricTab('year')">今年</button>
-<button id="statsMetricAll" class="pill" type="button" onclick="setStatsMetricTab('all')">累計</button>
 </div>
 <div id="statsPanelToday" class="statsMetricPanel active"><div class="statgrid">
 <div class="stat">最終収支<b id="todayTotal">0円</b></div><div class="stat">対局収支<b id="todayGrossTotal">0円</b></div>
@@ -800,9 +800,9 @@ input,select{min-width:0}
 </main>
 <script>
 const $=id=>document.getElementById(id);
-const APP_VERSION="7.33";
+const APP_VERSION="7.36";
 const BACKUP_SCHEMA_VERSION=1;
-let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="month",historyExpanded=false,statsRankMode="today",statsMetricTab="today",gameFeeFree=false,gameTobi=false,pendingStoreMode=false,rankDayMode="today",rankMonth="",rankYear="";
+let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="month",historyExpanded=false,statsRankMode="total",statsMetricTab="all",gameFeeFree=false,gameTobi=false,pendingStoreMode=false,rankDayMode="today",rankMonth="",rankYear="";
 const rawStores=localStorage.getItem("fm_stores"), rawRecords=localStorage.getItem("fm_records");
 // 読み込み時は絶対に空データで上書きしない。既存データは退避してから扱う。
 try{stores=JSON.parse(rawStores||"[]");records=JSON.parse(rawRecords||"[]")}catch(e){stores=[];records=[]}
@@ -814,6 +814,9 @@ rankMonth=today.slice(0,7);rankYear=today.slice(0,4);
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 stores=stores.map(s=>({...s,id:s.id||uid(),startPoints:+s.startPoints||25000,belowZero:s.belowZero||"no",tobiAmount:+s.tobiAmount||0,umaType:s.umaType||guessUma(s.uma),settlementRounding:s.settlementRounding||"halfUp"}));
+/* v7.36: show the target date for the previous-session tab */
+/* v7.35: make the previous-session definition explicit and default stats tabs to cumulative-first */
+/* v7.34: reflect the latest confirmed results from screenshots and reorder tabs to cumulative-first */
 /* v7.33: add previous-session tab to the top placement-count summary; all top tabs aggregate all stores */
 /* v7.31: top placement-count summary (today/carry/total) always aggregates all stores */
 /* v7.30: add total placement-count tab to top stats summary without changing stored results */
@@ -861,6 +864,22 @@ records=records.filter(r=>!(r.recovered===true && r.date==="2026-09-21"));
   confirmed20260925.forEach(d=>{
     if(!records.some(r=>sameRecord20260925(r,d))){
       records.push({id:d.seedId,date:"2026-09-25",shop:st.shop,storeId:st.id,total:d.total,gross:d.gross,rank:d.rank,points:d.points,chips:d.chips,games:1,players:4,gameFeeFree:false,gameTobi:d.gameTobi,pendingStore:false,photoRestored:true});
+    }
+  });
+  const confirmed20260926=[
+    {seedId:"photo-20260926-1",rank:2,points:23600,chips:1,total:300,gross:900,gameTobi:false},
+    {seedId:"photo-20260926-2",rank:2,points:33600,chips:1,total:1300,gross:1900,gameTobi:false},
+    {seedId:"photo-20260926-3",rank:4,points:0,chips:-3,total:-8100,gross:-7500,gameTobi:true},
+    {seedId:"photo-20260926-4",rank:3,points:19100,chips:-4,total:-4700,gross:-4100,gameTobi:false},
+    {seedId:"photo-20260926-5",rank:3,points:16400,chips:0,total:-3000,gross:-2400,gameTobi:false},
+    {seedId:"photo-20260926-6",rank:2,points:29800,chips:-2,total:-600,gross:0,gameTobi:false},
+    {seedId:"photo-20260926-7",rank:3,points:17500,chips:-1,total:-3400,gross:-2800,gameTobi:false},
+    {seedId:"photo-20260926-8",rank:3,points:26500,chips:1,total:-1500,gross:-900,gameTobi:false}
+  ];
+  const sameRecord20260926=(r,d)=>r.date==="2026-09-26" && (r.storeId===st.id || r.shop===st.shop) && +r.rank===d.rank && +r.points===d.points && +r.chips===d.chips && +r.total===d.total;
+  confirmed20260926.forEach(d=>{
+    if(!records.some(r=>sameRecord20260926(r,d))){
+      records.push({id:d.seedId,date:"2026-09-26",shop:st.shop,storeId:st.id,total:d.total,gross:d.gross,rank:d.rank,points:d.points,chips:d.chips,games:1,players:4,gameFeeFree:false,gameTobi:d.gameTobi,pendingStore:false,photoRestored:true});
     }
   });
   localStorage.setItem("fm_stores",JSON.stringify(stores));
@@ -1425,7 +1444,8 @@ function nextGameSameStore(storeId){
 
 function showStats(storeId){
  historyExpanded=false;
- statsRankMode="today";
+ statsRankMode="total";
+ statsMetricTab="all";
  renderNextGameButton(storeId||"");
  $("statsStore").innerHTML=`<option value="all">全店舗</option>`+stores.map(s=>`<option value="${s.id}">${esc(s.shop)}</option>`).join("");
  $("statsStore").value=storeId&&stores.some(s=>s.id===storeId)?storeId:"all";rankPeriod="month";rankMonth=today.slice(0,7);rankYear=today.slice(0,4);document.querySelectorAll(".pill[data-period]").forEach(b=>b.classList.toggle("active",b.dataset.period==="month"));renderRankPeriodControls();renderStats();show("stats");
@@ -1438,11 +1458,18 @@ function setStatsRankMode(mode){
  if($("statsTotalBtn"))$("statsTotalBtn").classList.toggle("active",mode==="total");
  renderStatsTopRanks();
 }
+function latestRecordDate(){
+ const dates=[...new Set(records.map(r=>String(r.date||"")).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)))].sort().reverse();
+ return dates[0]||"";
+}
 function previousSessionDate(){
- const dates=[...new Set(records.map(r=>r.date).filter(Boolean))].sort().reverse();
+ const dates=[...new Set(records.map(r=>String(r.date||"")).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)))].sort().reverse();
  if(!dates.length) return "";
- if(dates[0]===today) return dates.find(d=>d!==today)||today;
- return dates[0];
+ // Rule:
+ // - if there are records today, show the latest recorded date before today
+ // - otherwise, show the latest recorded date overall as "previous"
+ if(dates.includes(today)) return dates.find(d=>d!==today)||today;
+ return latestRecordDate();
 }
 function renderStatsTopRanks(){
  const box=$("statsTopRankSummary"); if(!box)return;
@@ -1461,7 +1488,8 @@ function renderStatsTopRanks(){
    maxPlayers=Math.max(...rr.map(r=>+r.players||storeForRecord(r)?.players||4));
  }
  const counts=Array.from({length:maxPlayers},(_,i)=>rr.filter(r=>+r.rank===i+1).length);
- box.innerHTML=`<div class="rankgrid">${counts.map((n,i)=>`<div class="rankbox">${i+1}着<b>${n}回</b></div>`).join("")}</div>`;
+ const prevDateNote=statsRankMode==="previous" && prevSession ? `<div class="note" style="margin:-4px 0 12px;text-align:center">対象日：${prevSession}</div>` : "";
+ box.innerHTML=`${prevDateNote}<div class="rankgrid">${counts.map((n,i)=>`<div class="rankbox">${i+1}着<b>${n}回</b></div>`).join("")}</div>`;
 }
 function filteredRecords(){const v=$("statsStore").value;return v==="all"?records:records.filter(r=>r.storeId===v)}
 function sumOf(rr,key="total"){return rr.reduce((a,r)=>a+(key==="gross"?recGross(r):(+r.total||0)),0)}
