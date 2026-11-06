@@ -650,12 +650,28 @@ input,select{min-width:0}
 
 #incomeTrend svg{display:block;width:100%;height:auto}
 #trendMonth[hidden]{display:none}
-#trendMonth{margin-top:10px}
+#trendMonth{
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+  -webkit-appearance:none;
+  appearance:none;
+  margin:10px 0 0;
+}
+#trendMonth::-webkit-date-and-time-value{min-width:0;text-align:center}
+header{display:flex;align-items:center;gap:5px}
+#refreshApp{margin-left:auto;width:auto;padding:6px 9px;font-size:12px;color:var(--gold2);background:transparent;border:1px solid var(--line);border-radius:8px}
+body:has(.screen.active:not(#home):not(#stats)) #refreshApp{visibility:hidden}
+.feeDetails{margin-top:10px}
+.feeDetails summary{cursor:pointer;color:var(--gold2);padding:6px 0}
+#dayClosing[hidden]{display:none}
 #trendBalance{font-weight:700}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.40</small></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.41</small><button type="button" id="refreshApp" onclick="location.reload()" aria-label="アプリを再読み込み">↻ 更新</button></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -767,6 +783,13 @@ input,select{min-width:0}
   <div id="nextGameFromStats"></div>
   <button id="finishDay" class="secondary" type="button" onclick="finishToday()" hidden>本日の対局を終了する</button>
 </div>
+<section class="card" id="dayClosing" hidden>
+  <h2>今日の収支</h2>
+  <div class="statgrid">
+    <div class="stat">対局収支（チップ込み）<b id="closingGross"></b></div>
+    <div class="stat">場代込み収支<b id="closingNet"></b></div>
+  </div>
+</section>
 <div class="card statsTopRanks">
 <div class="pillrow"><button id="statsTotalBtn" class="pill active" type="button" onclick="setStatsRankMode('total')">累計</button><button id="statsTodayBtn" class="pill" type="button" onclick="setStatsRankMode('today')">今日</button><button id="statsPreviousBtn" class="pill" type="button" onclick="setStatsRankMode('previous')">前回</button><button id="statsCarryBtn" class="pill" type="button" onclick="setStatsRankMode('carry')">前日から合算</button></div>
 <div id="statsTopRankSummary"></div>
@@ -780,22 +803,14 @@ input,select{min-width:0}
 <button id="statsMetricMonth" class="pill" type="button" onclick="setStatsMetricTab('month')">今月</button>
 <button id="statsMetricYear" class="pill" type="button" onclick="setStatsMetricTab('year')">今年</button>
 </div>
-<div id="statsPanelToday" class="statsMetricPanel active"><div class="statgrid">
-<div class="stat">最終収支<b id="todayTotal">0円</b></div><div class="stat">対局収支<b id="todayGrossTotal">0円</b></div>
-<div class="stat">チップ収支<b id="todayChipTotal">0円</b></div><div class="stat">ゲーム代<b id="todayGameFeeTotal">0円</b></div>
-</div></div>
-<div id="statsPanelMonth" class="statsMetricPanel"><div class="statgrid">
-<div class="stat">最終収支<b id="monthTotal">0円</b></div><div class="stat">対局収支<b id="monthGrossTotal">0円</b></div>
-<div class="stat">チップ収支<b id="monthChipTotal">0円</b></div><div class="stat">ゲーム代<b id="monthGameFeeTotal">0円</b></div>
-</div></div>
-<div id="statsPanelYear" class="statsMetricPanel"><div class="statgrid">
-<div class="stat">最終収支<b id="yearTotal">0円</b></div><div class="stat">対局収支<b id="yearGrossTotal">0円</b></div>
-<div class="stat">チップ収支<b id="yearChipTotal">0円</b></div><div class="stat">ゲーム代<b id="yearGameFeeTotal">0円</b></div>
-</div></div>
-<div id="statsPanelAll" class="statsMetricPanel"><div class="statgrid">
-<div class="stat">最終収支<b id="allTotal">0円</b></div><div class="stat">対局収支<b id="grossTotal">0円</b></div>
-<div class="stat">チップ収支<b id="chipTotal">0円</b></div><div class="stat">ゲーム代<b id="gameFeeTotal">0円</b></div>
-</div></div>
+<div id="statsPanelToday" class="statsMetricPanel active"><div class="statgrid"><div class="stat">対局収支<b id="todayGrossTotal">0円</b></div><div class="stat">チップ収支<b id="todayChipTotal">0円</b></div></div>
+<details class="feeDetails"><summary>最終収支・ゲーム代</summary><div class="statgrid"><div class="stat">最終収支<b id="todayTotal">0円</b></div><div class="stat">ゲーム代<b id="todayGameFeeTotal">0円</b></div></div></details></div>
+<div id="statsPanelMonth" class="statsMetricPanel"><div class="statgrid"><div class="stat">対局収支<b id="monthGrossTotal">0円</b></div><div class="stat">チップ収支<b id="monthChipTotal">0円</b></div></div>
+<details class="feeDetails"><summary>最終収支・ゲーム代</summary><div class="statgrid"><div class="stat">最終収支<b id="monthTotal">0円</b></div><div class="stat">ゲーム代<b id="monthGameFeeTotal">0円</b></div></div></details></div>
+<div id="statsPanelYear" class="statsMetricPanel"><div class="statgrid"><div class="stat">対局収支<b id="yearGrossTotal">0円</b></div><div class="stat">チップ収支<b id="yearChipTotal">0円</b></div></div>
+<details class="feeDetails"><summary>最終収支・ゲーム代</summary><div class="statgrid"><div class="stat">最終収支<b id="yearTotal">0円</b></div><div class="stat">ゲーム代<b id="yearGameFeeTotal">0円</b></div></div></details></div>
+<div id="statsPanelAll" class="statsMetricPanel"><div class="statgrid"><div class="stat">対局収支<b id="grossTotal">0円</b></div><div class="stat">チップ収支<b id="chipTotal">0円</b></div></div>
+<details class="feeDetails"><summary>最終収支・ゲーム代</summary><div class="statgrid"><div class="stat">最終収支<b id="allTotal">0円</b></div><div class="stat">ゲーム代<b id="gameFeeTotal">0円</b></div></div></details></div>
 <div class="integratedRankBlock">
   <h3>着順成績</h3>
   <div id="integratedRankChart" class="chart"></div>
@@ -819,7 +834,7 @@ input,select{min-width:0}
 </main>
 <script>
 const $=id=>document.getElementById(id);
-const APP_VERSION="7.40";
+const APP_VERSION="7.41";
 const BACKUP_SCHEMA_VERSION=1;
 let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="month",statsRankMode="total",statsMetricTab="all",gameFeeFree=false,gameTobi=false,pendingStoreMode=false,rankDayMode="today",rankMonth="",rankYear="";
 const rawStores=localStorage.getItem("fm_stores"), rawRecords=localStorage.getItem("fm_records");
@@ -1469,11 +1484,17 @@ function finishToday(){
  renderNextGameButton("");
  $("finishDay").hidden=true;
  renderStats();
- $("statsResults").scrollIntoView({block:"start"});
+ const day=records.filter(r=>r.date===today);
+ setMoneyStat("closingGross",sumOf(day,"gross"));
+ setMoneyStat("closingNet",sumOf(day));
+ $("dayClosing").hidden=false;
+ window.scrollTo(0,0);
 }
 function showStats(storeId,afterSave=false){
  today=localToday();
  $("finishDay").hidden=!afterSave;
+ $("dayClosing").hidden=true;
+ document.querySelectorAll(".feeDetails").forEach(detail=>detail.open=false);
  statsRankMode="total";
  statsMetricTab="all";
  renderNextGameButton(storeId||"");
@@ -1752,4 +1773,5 @@ window.addEventListener("pageshow",()=>{
 
 </script>
 </body></html>
+
 
