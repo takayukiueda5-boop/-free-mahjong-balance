@@ -671,7 +671,7 @@ body:has(.screen.active:not(#home):not(#stats)) #refreshApp{visibility:hidden}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.41</small><button type="button" id="refreshApp" onclick="location.reload()" aria-label="アプリを再読み込み">↻ 更新</button></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.42</small><button type="button" id="refreshApp" onclick="refreshAppView()" aria-label="アプリを再読み込み">↻ 更新</button></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -834,7 +834,7 @@ body:has(.screen.active:not(#home):not(#stats)) #refreshApp{visibility:hidden}
 </main>
 <script>
 const $=id=>document.getElementById(id);
-const APP_VERSION="7.41";
+const APP_VERSION="7.42";
 const BACKUP_SCHEMA_VERSION=1;
 let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="month",statsRankMode="total",statsMetricTab="all",gameFeeFree=false,gameTobi=false,pendingStoreMode=false,rankDayMode="today",rankMonth="",rankYear="";
 const rawStores=localStorage.getItem("fm_stores"), rawRecords=localStorage.getItem("fm_records");
@@ -1454,6 +1454,7 @@ function cancelGameEdit(){editRecordIndex=-1;pendingStoreMode=false;show("home")
 
 function renderNextGameButton(storeId){
  const box=$("nextGameFromStats"); if(!box)return;
+ box.dataset.storeId=storeId||"";
  if(!storeId){box.innerHTML="";return}
  const st=stores.find(x=>x.id===storeId); if(!st){box.innerHTML="";return}
  box.innerHTML=`<button class="primary" type="button" onclick="nextGameSameStore('${storeId}')">同じ店舗で次の対局を入力</button>`;
@@ -1484,11 +1485,14 @@ function finishToday(){
  renderNextGameButton("");
  $("finishDay").hidden=true;
  renderStats();
+ renderDayClosing();
+ window.scrollTo(0,0);
+}
+function renderDayClosing(){
  const day=records.filter(r=>r.date===today);
  setMoneyStat("closingGross",sumOf(day,"gross"));
  setMoneyStat("closingNet",sumOf(day));
  $("dayClosing").hidden=false;
- window.scrollTo(0,0);
 }
 function showStats(storeId,afterSave=false){
  today=localToday();
@@ -1757,7 +1761,41 @@ document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
 renderStores();
 
 
+function refreshAppView(){
+ const view={scrollY:window.scrollY};
+ if($("stats").classList.contains("active")){
+   view.stats={
+     store:$("statsStore").value, nextStore:$("nextGameFromStats").dataset.storeId,
+     afterSave:!$("finishDay").hidden, closing:!$("dayClosing").hidden,
+     rank:statsRankMode, metric:statsMetricTab, trend:trendPeriod, month:$("trendMonth").value,
+     openDetails:Array.from(document.querySelectorAll(".feeDetails"),detail=>detail.open)
+   };
+ }
+ window.history.replaceState({...window.history.state,mahjongRefresh:view},"");
+ window.location.reload();
+}
+
+function restoreRefreshView(){
+ const state=window.history.state;
+ if(!state?.mahjongRefresh)return;
+ const {mahjongRefresh:view,...rest}=state;
+ window.history.replaceState(rest,"");
+ const stats=view.stats;
+ if(stats){
+   showStats(stats.nextStore,stats.afterSave);
+   $("statsStore").value=stores.some(s=>s.id===stats.store)?stats.store:"all";
+   statsRankMode=stats.rank;
+   statsMetricTab=stats.metric;
+   trendPeriod=stats.trend;
+   $("trendMonth").value=stats.month;
+   if(stats.closing)renderDayClosing();
+   renderStats();
+   document.querySelectorAll(".feeDetails").forEach((detail,i)=>detail.open=stats.openDetails[i]);
+ }
+ requestAnimationFrame(()=>window.scrollTo(0,view.scrollY));
+}
 window.addEventListener("pageshow",()=>{
+ restoreRefreshView();
  const game=$("game");
  if(game && game.classList.contains("active")){
    ensureSelectedStore();
