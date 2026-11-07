@@ -671,10 +671,12 @@ body:has(.screen.active:not(#home):not(#stats)) #refreshApp{visibility:hidden}
 .feeDetails summary{cursor:pointer;color:var(--gold2);padding:6px 0}
 #dayClosing[hidden]{display:none}
 #trendBalance{font-weight:700}
+.recentGames > summary{cursor:pointer;font-size:1rem;font-weight:700;color:var(--gold2)}
+.recentGames[open] > summary{margin-bottom:12px}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.43</small><button type="button" id="refreshApp" onclick="refreshAppView()" aria-label="アプリを再読み込み">↻ 更新</button></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.44</small><button type="button" id="refreshApp" onclick="refreshAppView()" aria-label="アプリを再読み込み">↻ 更新</button></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -797,7 +799,7 @@ body:has(.screen.active:not(#home):not(#stats)) #refreshApp{visibility:hidden}
 <div class="pillrow"><button id="statsTotalBtn" class="pill active" type="button" onclick="setStatsRankMode('total')">累計</button><button id="statsTodayBtn" class="pill" type="button" onclick="setStatsRankMode('today')">今日</button><button id="statsPreviousBtn" class="pill" type="button" onclick="setStatsRankMode('previous')">前回</button><button id="statsCarryBtn" class="pill" type="button" onclick="setStatsRankMode('carry')">前日から合算</button></div>
 <div id="statsTopRankSummary"></div>
 </div>
-<div class="card"><h2>最近の対局（直近2日分）</h2><div class="note" style="margin-bottom:8px">タップすると内容を編集できます。</div><div id="history"></div></div>
+<details class="card recentGames"><summary>最近の対局（直近2日分）</summary><div class="note" style="margin-bottom:8px">タップすると内容を編集できます。</div><div id="history"></div></details>
 <div class="card" id="statsResults"><h2>成績管理</h2>
 <div class="toolbar"><select id="statsStore" onchange="renderStats()"></select></div>
 <div class="pillrow statsMetricTabs">
@@ -837,7 +839,7 @@ body:has(.screen.active:not(#home):not(#stats)) #refreshApp{visibility:hidden}
 </main>
 <script>
 const $=id=>document.getElementById(id);
-const APP_VERSION="7.43";
+const APP_VERSION="7.44";
 const BACKUP_SCHEMA_VERSION=1;
 let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="month",statsRankMode="total",statsMetricTab="all",gameFeeFree=false,gameTobi=false,pendingStoreMode=false,rankDayMode="today",rankMonth="",rankYear="";
 const rawStores=localStorage.getItem("fm_stores"), rawRecords=localStorage.getItem("fm_records");
@@ -1814,5 +1816,3 @@ window.addEventListener("pageshow",()=>{
 
 </script>
 </body></html>
-
-
