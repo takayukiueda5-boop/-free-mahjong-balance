@@ -676,7 +676,7 @@ body:has(.screen.active:not(#home):not(#stats)) #refreshApp{visibility:hidden}
 </style>
 </head>
 <body>
-<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.45</small><button type="button" id="refreshApp" onclick="refreshAppView()" aria-label="アプリを再読み込み">↻ 更新</button></header>
+<header>🀄 フリー麻雀収支 <small style="font-size:11px;font-weight:500;opacity:.7">v7.46</small><button type="button" id="refreshApp" onclick="refreshAppView()" aria-label="アプリを再読み込み">↻ 更新</button></header>
 <main>
 <section id="home" class="screen active">
 <div class="card">
@@ -788,6 +788,18 @@ body:has(.screen.active:not(#home):not(#stats)) #refreshApp{visibility:hidden}
   <div id="nextGameFromStats"></div>
   <button id="finishDay" class="secondary" type="button" onclick="finishToday()" hidden>本日の対局を終了する</button>
 </div>
+<section class="card" id="todayLiveCard" aria-label="本日の途中成績">
+  <h2 style="margin-bottom:6px">本日の成績・収支 <small id="todayLiveDate" style="font-size:12px;font-weight:400;opacity:.7"></small></h2>
+  <div id="todayLiveCount" class="note" style="margin:0 0 12px"></div>
+  <div id="todayLiveRanks" class="rankgrid"></div>
+  <div class="statgrid" style="margin-top:15px">
+    <div class="stat">対局収支<b id="todayLiveGross">0円</b></div>
+    <div class="stat">チップ収支<b id="todayLiveChips">0円</b></div>
+    <div class="stat">ゲーム代・トップ賞<b id="todayLiveFees">0円</b></div>
+    <div class="stat">最終収支（場代込み）<b id="todayLiveNet">0円</b></div>
+  </div>
+  <p class="note" style="margin:12px 0 0">当日入力済みの全店舗の対局を集計。次の対局を記録すると更新されます。</p>
+</section>
 <section class="card" id="dayClosing" hidden>
   <h2>今日の収支</h2>
   <div class="statgrid">
@@ -840,7 +852,7 @@ body:has(.screen.active:not(#home):not(#stats)) #refreshApp{visibility:hidden}
 </main>
 <script>
 const $=id=>document.getElementById(id);
-const APP_VERSION="7.45";
+const APP_VERSION="7.46";
 const BACKUP_SCHEMA_VERSION=1;
 let stores=[],records=[],selected=null,editStoreIndex=-1,editRecordIndex=-1,rankPeriod="month",statsRankMode="total",statsMetricTab="all",gameFeeFree=false,gameTobi=false,pendingStoreMode=false,rankDayMode="today",rankMonth="",rankYear="";
 const rawStores=localStorage.getItem("fm_stores"), rawRecords=localStorage.getItem("fm_records");
@@ -1653,7 +1665,20 @@ function renderIncomeTrend(){
  chart.innerHTML=`<svg viewBox="0 0 350 180" role="img" aria-label="日別の累計対局収支、${fmt(balance)}"><g fill="#c6c7b8" font-size="12"><text x="72" y="11" text-anchor="end">円</text>${grid}<text x="78" y="168">${monthly?"月初":label(dates[0])}</text><text x="332" y="168" text-anchor="end">${label(last)}</text></g><polyline points="${path}" fill="none" stroke="#79d9a3" stroke-width="2.8" stroke-linejoin="round"/><circle cx="332" cy="${y(balance)}" r="4" fill="#79d9a3"/></svg>`;
 }
 
+function renderTodayLive(){
+ const day=records.filter(r=>r.date===today);
+ const dateEl=$("todayLiveDate");
+ if(dateEl)dateEl.textContent=today.replaceAll("-","/");
+ $("todayLiveCount").textContent=`${day.length}対局（全店舗）`;
+ const maxPlayers=day.length?Math.max(4,...day.map(r=>+r.players||storeForRecord(r)?.players||4)):4;
+ $("todayLiveRanks").innerHTML=Array.from({length:maxPlayers},(_,i)=>`<div class="rankbox">${i+1}着<b>${day.filter(r=>+r.rank===i+1).length}回</b></div>`).join("");
+ setMoneyStat("todayLiveGross",sumOf(day,"gross"));
+ setMoneyStat("todayLiveChips",totalChipIncome(day));
+ setMoneyStat("todayLiveFees",-totalPaidGameFees(day));
+ setMoneyStat("todayLiveNet",sumOf(day));
+}
 function renderStats(){
+ renderTodayLive();
  renderIncomeTrend();
  const rr=filteredRecords(),y=today.slice(0,4),m=today.slice(0,7),by=fn=>rr.filter(fn);
  const day=by(r=>r.date===today),mon=by(r=>r.date.slice(0,7)===m),yr=by(r=>r.date.slice(0,4)===y),all=sumOf(rr);
